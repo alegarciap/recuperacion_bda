@@ -12,6 +12,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
+import utils.EncryptionUtil;
 
 /**
  * Implementación de la interfaz IParticipanteEstudianteDAO utilizando JPA.
@@ -84,7 +85,9 @@ public class ParticipanteEstudianteDAO extends ParticipanteDAO implements IParti
     }
 
     /**
-     * Busca un participante estudiante por su número de control.
+     * Busca un participante estudiante por su número de control. Como el número
+     * de control se almacena encriptado, esta búsqueda requiere cargar todos
+     * los estudiantes y filtrar en memoria.
      *
      * @param numeroControl Número de control a buscar
      * @return ParticipanteEstudiante encontrado o null si no existe
@@ -92,15 +95,27 @@ public class ParticipanteEstudianteDAO extends ParticipanteDAO implements IParti
      */
     @Override
     public ParticipanteEstudiante buscarPorNumeroControl(Integer numeroControl) throws PersistenciaException {
+        if (numeroControl == null) {
+            return null;
+        }
+
+        // Encriptar el número de control para la búsqueda
+        String numeroControlEncriptado = EncryptionUtil.encriptar(numeroControl.toString());
+
         EntityManager em = Conexion.crearConexion();
         try {
             TypedQuery<ParticipanteEstudiante> query = em.createQuery(
                     "select pe from ParticipanteEstudiante pe where pe.numeroControl = :numeroControl",
                     ParticipanteEstudiante.class);
-            query.setParameter("numeroControl", numeroControl);
-            return query.getSingleResult();
-        } catch (NoResultException ex) {
-            return null;
+            query.setParameter("numeroControl", numeroControlEncriptado);
+
+            try {
+                ParticipanteEstudiante estudiante = query.getSingleResult();
+                // Los datos se desencriptarán en el método auxiliar del ParticipanteDAO
+                return estudiante;
+            } catch (NoResultException ex) {
+                return null;
+            }
         } catch (Exception ex) {
             throw new PersistenciaException("Error al buscar estudiante por número de control: " + ex.getMessage());
         } finally {

@@ -34,23 +34,25 @@ public interface IInscripcionBO {
     public void cancelar(Long id) throws NegocioException;
 
     /**
-     * Registra la asistencia de un participante a una actividad.
+     * Obtiene todas las inscripciones de una actividad identificada por nombre
+     * y fecha.
      *
-     * @param id ID de la inscripción
-     * @param asistio true si el participante asistió, false si no asistió
-     * @return DTO con la información actualizada
-     * @throws NegocioException Si hay errores de validación o persistencia
-     */
-    public InscripcionDTO registrarAsistencia(Long id, boolean asistio) throws NegocioException;
-
-    /**
-     * Obtiene todas las inscripciones de una actividad.
-     *
-     * @param actividadId ID de la actividad
+     * @param nombreActividad Nombre de la actividad
+     * @param fechaHoraStr Fecha y hora de inicio en formato string
      * @return Lista de DTOs con la información de las inscripciones
      * @throws NegocioException Si hay errores de persistencia
      */
-    public List<InscripcionDTO> consultarPorActividad(Long actividadId) throws NegocioException;
+    public List<InscripcionDTO> consultarPorActividad(String nombreActividad, String fechaHoraStr) throws NegocioException;
+
+    /**
+     * Registra la asistencia de un participante a una actividad.
+     *
+     * @param inscripcionDTO Objeto InscripcionDTO con la información de la
+     * inscripción
+     * @param asistio true si el participante asistió, false si no asistió
+     * @throws NegocioException Si hay errores de validación o persistencia
+     */
+    public void registrarAsistencia(InscripcionDTO inscripcionDTO, boolean asistio) throws NegocioException;
 
     /**
      * Obtiene todas las inscripciones de un participante.

@@ -4,17 +4,83 @@
  */
 package presentacion.moduloOrganizadores;
 
+import DTOs.OrganizadorDTO;
+import control.CoordinadorAplicacion;
+import control.CoordinadorNegocio;
+import exception.NegocioException;
+import javax.swing.JOptionPane;
+
 /**
+ * Formulario para la creación de un nuevo organizador.
  *
- * @author alega
+ * @author Alejandra García 252444
  */
 public class NuevoOrganizadorForm extends javax.swing.JFrame {
+    
+    private final CoordinadorAplicacion coordinadorAplicacion;
+    private final CoordinadorNegocio coordinadorNegocio;
 
     /**
      * Creates new form NuevoOrganizadorForm
      */
     public NuevoOrganizadorForm() {
         initComponents();
+        this.coordinadorAplicacion = CoordinadorAplicacion.getInstancia();
+        this.coordinadorNegocio = CoordinadorNegocio.getInstancia();
+
+        // Centrar formulario en pantalla
+        this.setLocationRelativeTo(null);
+    }
+    
+    /**
+     * Valida que todos los campos requeridos estén completados.
+     *
+     * @return true si todos los campos son válidos, false en caso contrario
+     */
+    private boolean validarCampos() {
+        if (campoNombre.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "El nombre del organizador es obligatorio",
+                    "Error de validación", JOptionPane.WARNING_MESSAGE);
+            campoNombre.requestFocus();
+            return false;
+        }
+
+        if (campoCorreo.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "El correo electrónico es obligatorio",
+                    "Error de validación", JOptionPane.WARNING_MESSAGE);
+            campoCorreo.requestFocus();
+            return false;
+        }
+
+        // Validar formato de correo electrónico
+        String correo = campoCorreo.getText().trim();
+        String regex = "^[\\w-]+(\\.[\\w-]+)*@([\\w-]+\\.)+[a-zA-Z]{2,7}$";
+
+        if (!correo.matches(regex)) {
+            JOptionPane.showMessageDialog(this,
+                    "El formato del correo electrónico no es válido",
+                    "Error de validación", JOptionPane.WARNING_MESSAGE);
+            campoCorreo.requestFocus();
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Crea un DTO de Organizador con los datos del formulario.
+     *
+     * @return DTO con la información del organizador
+     */
+    private OrganizadorDTO crearOrganizadorDTO() {
+        OrganizadorDTO organizadorDTO = new OrganizadorDTO();
+        organizadorDTO.setNombre(campoNombre.getText().trim());
+        organizadorDTO.setCorreo(campoCorreo.getText().trim());
+        organizadorDTO.setTipoOrganizador(cbTipoOrganizador.getSelectedItem().toString().toUpperCase());
+
+        return organizadorDTO;
     }
 
     /**
@@ -149,47 +215,39 @@ public class NuevoOrganizadorForm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarActionPerformed
-        // TODO add your handling code here:
+        if (!validarCampos()) {
+            return;
+        }
+
+        try {
+            OrganizadorDTO organizadorDTO = crearOrganizadorDTO();
+            coordinadorNegocio.registrarOrganizador(organizadorDTO);
+
+            JOptionPane.showMessageDialog(this,
+                    "Organizador registrado correctamente",
+                    "Éxito", JOptionPane.INFORMATION_MESSAGE);
+
+            // Volver al módulo de organizadores
+            coordinadorAplicacion.mostrarModuloOrganizadores();
+            this.dispose();
+
+        } catch (NegocioException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al registrar organizador: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btnGuardarActionPerformed
 
     private void btnCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnCancelarActionPerformed
+        int confirmacion = JOptionPane.showConfirmDialog(this,
+                "¿Está seguro de cancelar el registro? Los datos no se guardarán.",
+                "Confirmar cancelación", JOptionPane.YES_NO_OPTION);
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(NuevoOrganizadorForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(NuevoOrganizadorForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(NuevoOrganizadorForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(NuevoOrganizadorForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        if (confirmacion == JOptionPane.YES_OPTION) {
+            coordinadorAplicacion.mostrarModuloOrganizadores();
+            this.dispose();
         }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new NuevoOrganizadorForm().setVisible(true);
-            }
-        });
-    }
+    }//GEN-LAST:event_btnCancelarActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCancelar;

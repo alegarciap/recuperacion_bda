@@ -7,6 +7,7 @@ package interfaces;
 import DTOs.ActividadCreacionDTO;
 import DTOs.ActividadDTO;
 import DTOs.ActividadDetalleDTO;
+import DTOs.LugarDTO;
 import exception.NegocioException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -74,23 +75,35 @@ public interface IActividadBO {
     public List<ActividadDTO> consultarPorFecha(LocalDateTime fecha) throws NegocioException;
 
     /**
+     * Consulta una actividad por su nombre y fecha.
+     *
+     * @param nombre Nombre de la actividad
+     * @param fechaHora Fecha y hora de inicio
+     * @return DTO con la información detallada de la actividad
+     * @throws NegocioException Si hay errores de persistencia o la actividad no
+     * existe
+     */
+    public ActividadDetalleDTO consultarPorFechaNombre(String nombre, LocalDateTime fechaHora) throws NegocioException;
+
+    /**
      * Marca una actividad como finalizada.
      *
-     * @param id ID de la actividad a finalizar
+     * @param nombre Nombre de la actividad
+     * @param fechaHora Fecha y hora de inicio
      * @return DTO con la información actualizada
      * @throws NegocioException Si hay errores de validación o persistencia
      */
-    public ActividadDTO finalizarActividad(Long id) throws NegocioException;
+    public ActividadDTO finalizarActividad(String nombre, LocalDateTime fechaHora) throws NegocioException;
 
     /**
      * Verifica si hay conflictos de horario entre actividades en el mismo
      * lugar.
      *
      * @param actividadDTO DTO con la información de la actividad a verificar
-     * @param lugarId ID del lugar a verificar
+     * @param lugarDTO Objeto LugarDTO con la información del lugar
      * @return true si hay conflictos, false si no los hay
      * @throws NegocioException Si hay errores de persistencia
      */
-    public boolean verificarConflictosHorario(ActividadCreacionDTO actividadDTO, Long lugarId) throws NegocioException;
+    public boolean verificarConflictosHorario(ActividadCreacionDTO actividadDTO, LugarDTO lugarDTO) throws NegocioException;
 
 }

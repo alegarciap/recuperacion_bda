@@ -7,6 +7,7 @@ package BOs;
 import DTOs.ActividadCreacionDTO;
 import DTOs.ActividadDTO;
 import DTOs.ActividadDetalleDTO;
+import DTOs.LugarDTO;
 import entidades.Actividad;
 import entidades.Evento;
 import entidades.Evento.EstadoEvento;
@@ -58,28 +59,32 @@ public class ActividadBO implements IActividadBO {
             // Validar que los campos requeridos no sean nulos o vacíos
             validarCamposRequeridos(actividadDTO);
 
-            // Obtener el evento al que pertenecerá la actividad
-            Evento evento = eventoDAO.buscarPorId(actividadDTO.getEventoId());
-            if (evento == null) {
+            // Obtener el evento por nombre
+            List<Evento> eventos = eventoDAO.consultarPorTitulo(actividadDTO.getNombreEvento());
+            if (eventos.isEmpty()) {
                 throw new NegocioException("El evento especificado no existe.");
             }
+            Evento evento = eventos.get(0);
 
             // Validar que el evento esté en estado PLANEADO
             if (evento.getEstado() != EstadoEvento.PLANEADO) {
                 throw new NegocioException("Solo se pueden agregar actividades a eventos en estado PLANEADO.");
             }
 
-            // Obtener el lugar donde se realizará la actividad
-            Lugar lugar = lugarDAO.buscarPorId(actividadDTO.getLugarId());
-            if (lugar == null) {
+            // Obtener el lugar por nombre
+            List<Lugar> lugares = lugarDAO.consultarPorNombre(actividadDTO.getNombreLugar());
+            if (lugares.isEmpty()) {
                 throw new NegocioException("El lugar especificado no existe.");
             }
+            Lugar lugar = lugares.get(0);
 
             // Validar que el nombre de la actividad no se repita dentro del mismo evento
             validarNombreUnico(actividadDTO.getNombre(), evento);
 
-            // Validar que no haya conflictos de horario en el mismo lugar
-            boolean hayConflicto = verificarConflictosHorario(actividadDTO, actividadDTO.getLugarId());
+            // Verificar conflictos de horario
+            LugarDTO lugarDTO = new LugarDTO();
+            lugarDTO.setNombre(actividadDTO.getNombreLugar());
+            boolean hayConflicto = verificarConflictosHorario(actividadDTO, lugarDTO);
             if (hayConflicto) {
                 throw new NegocioException("Existe un conflicto de horario con otra actividad en el mismo lugar.");
             }
@@ -240,20 +245,60 @@ public class ActividadBO implements IActividadBO {
             throw new NegocioException("Error al consultar actividades por fecha: " + ex.getMessage());
         }
     }
+    
+    /**
+     * Consulta una actividad por su nombre y fecha.
+     *
+     * @param nombre Nombre de la actividad
+     * @param fechaHora Fecha y hora de inicio
+     * @return DTO con la información detallada de la actividad
+     * @throws NegocioException Si hay errores de persistencia o la actividad no
+     * existe
+     */
+    @Override
+    public ActividadDetalleDTO consultarPorFechaNombre(String nombre, LocalDateTime fechaHora) throws NegocioException {
+        try {
+            // Buscar todas las actividades
+            List<Actividad> actividades = actividadDAO.consultarTodos();
+
+            // Filtrar por nombre y fecha
+            Actividad actividad = actividades.stream()
+                    .filter(a -> a.getNombre().equals(nombre) && a.getFechaHoraInicio().equals(fechaHora))
+                    .findFirst()
+                    .orElse(null);
+
+            if (actividad == null) {
+                throw new NegocioException("No se encontró la actividad especificada.");
+            }
+
+            return actividadMapper.toDetalleDTO(actividad);
+        } catch (PersistenciaException ex) {
+            throw new NegocioException("Error al consultar la actividad: " + ex.getMessage());
+        }
+    }
 
     /**
      * Marca una actividad como finalizada.
      *
-     * @param id ID de la actividad a finalizar
+     * @param nombre Nombre de la actividad
+     * @param fechaHora Fecha y hora de inicio
      * @return DTO con la información actualizada
      * @throws NegocioException Si hay errores de validación o persistencia
      */
     @Override
-    public ActividadDTO finalizarActividad(Long id) throws NegocioException {
+    public ActividadDTO finalizarActividad(String nombre, LocalDateTime fechaHora) throws NegocioException {
         try {
-            Actividad actividad = actividadDAO.buscarPorId(id);
+            // Buscar todas las actividades
+            List<Actividad> actividades = actividadDAO.consultarTodos();
+
+            // Filtrar por nombre y fecha
+            Actividad actividad = actividades.stream()
+                    .filter(a -> a.getNombre().equals(nombre) && a.getFechaHoraInicio().equals(fechaHora))
+                    .findFirst()
+                    .orElse(null);
+
             if (actividad == null) {
-                throw new NegocioException("La actividad con ID " + id + " no existe.");
+                throw new NegocioException("No se encontró la actividad especificada.");
             }
 
             // Verificar si ya está finalizada
@@ -276,22 +321,21 @@ public class ActividadBO implements IActividadBO {
      * lugar.
      *
      * @param actividadDTO DTO con la información de la actividad a verificar
-     * @param lugarId ID del lugar a verificar
+     * @param lugarDTO Objeto LugarDTO con la información del lugar
      * @return true si hay conflictos, false si no los hay
      * @throws NegocioException Si hay errores de persistencia
      */
     @Override
-    public boolean verificarConflictosHorario(ActividadCreacionDTO actividadDTO, Long lugarId) throws NegocioException {
+    public boolean verificarConflictosHorario(ActividadCreacionDTO actividadDTO, LugarDTO lugarDTO) throws NegocioException {
         try {
-            if (actividadDTO == null || lugarId == null) {
-                throw new NegocioException("La actividad y el lugar no pueden ser nulos.");
+            // Buscar el lugar por nombre
+            List<Lugar> lugares = lugarDAO.consultarPorNombre(lugarDTO.getNombre());
+            if (lugares.isEmpty()) {
+                throw new NegocioException("El lugar especificado no existe.");
             }
 
-            // Obtener el lugar
-            Lugar lugar = lugarDAO.buscarPorId(lugarId);
-            if (lugar == null) {
-                throw new NegocioException("El lugar con ID " + lugarId + " no existe.");
-            }
+            // Tomar el primer lugar que coincida con el nombre
+            Lugar lugar = lugares.get(0);
 
             // Obtener todas las actividades en el mismo lugar
             List<Actividad> actividades = actividadDAO.consultarPorLugar(lugar);
@@ -303,7 +347,7 @@ public class ActividadBO implements IActividadBO {
             LocalDateTime horaInicio = actividadDTO.getFechaHoraInicio();
             LocalDateTime horaFin = horaInicio.plusMinutes(actividadDTO.getDuracion());
 
-            // Verificar si hay otras actividades
+            // Verificar si hay otras actividades que se traslapen
             for (Actividad actividad : actividades) {
                 // Si la actividad está finalizada, no se considera para conflictos
                 if (actividad.getFinalizado()) {
@@ -322,11 +366,11 @@ public class ActividadBO implements IActividadBO {
                         || (horaFin.isAfter(actividadInicio) && horaFin.isBefore(actividadFin))
                         || (horaInicio.isBefore(actividadInicio) && horaFin.isAfter(actividadFin))
                         || (horaInicio.isEqual(actividadInicio))) {
-                    return true; // Hay PROBLEMASSS
+                    return true; // Hay conflicto
                 }
             }
 
-            return false; // No hay 
+            return false; // No hay conflicto
         } catch (PersistenciaException ex) {
             throw new NegocioException("Error al verificar conflictos de horario: " + ex.getMessage());
         }
@@ -363,12 +407,16 @@ public class ActividadBO implements IActividadBO {
             throw new NegocioException("La duración debe ser un número positivo.");
         }
 
-        if (actividadDTO.getEventoId() == null) {
+        if (actividadDTO.getNombreEvento()== null) {
             throw new NegocioException("El evento de la actividad es obligatorio.");
         }
 
-        if (actividadDTO.getLugarId() == null) {
+        if (actividadDTO.getNombreLugar()== null) {
             throw new NegocioException("El lugar de la actividad es obligatorio.");
+        }
+        
+        if (actividadDTO.getNombreOrganizador()== null) {
+            throw new NegocioException("El organizador de la actividad es obligatorio.");
         }
 
         // Validar que la fecha de inicio sea futura

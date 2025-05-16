@@ -4,17 +4,260 @@
  */
 package presentacion.moduloActividades;
 
+import DTOs.ActividadCreacionDTO;
+import DTOs.EventoDTO;
+import DTOs.LugarDTO;
+import DTOs.OrganizadorDTO;
+import control.CoordinadorAplicacion;
+import control.CoordinadorNegocio;
+import exception.NegocioException;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.DefaultListModel;
+import javax.swing.JOptionPane;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+
 /**
+ * Formulario para agregar una actividad en el módulo de actividades.
  *
- * @author alega
+ * @author Alejandra García 252444
  */
 public class NuevaActividadForm extends javax.swing.JFrame {
+    
+    private List<EventoDTO> listaEventos;
+    private List<LugarDTO> listaLugaresFiltrados;
+    private List<OrganizadorDTO> listaOrganizadoresFiltrados;
+    private EventoDTO eventoSeleccionado;
+    private LugarDTO lugarSeleccionado;
+    private OrganizadorDTO organizadorSeleccionado;
+
+    private DefaultListModel<String> modeloListaEventos;
+    private DefaultListModel<String> modeloListaLugares;
+    private DefaultListModel<String> modeloListaOrganizadores;
 
     /**
      * Creates new form NuevaActividadForm
      */
     public NuevaActividadForm() {
         initComponents();
+        this.setLocationRelativeTo(null);
+        this.setTitle("Nueva Actividad");
+
+        // Inicializar listas
+        listaEventos = new ArrayList<>();
+        listaLugaresFiltrados = new ArrayList<>();
+        listaOrganizadoresFiltrados = new ArrayList<>();
+
+        // Inicializar modelos de listas
+        modeloListaEventos = new DefaultListModel<>();
+        modeloListaLugares = new DefaultListModel<>();
+        modeloListaOrganizadores = new DefaultListModel<>();
+
+        jList.setModel(modeloListaEventos);
+        jList2.setModel(modeloListaLugares);
+        jList3.setModel(modeloListaOrganizadores);
+
+        // Cargar datos iniciales
+        cargarEventos();
+
+        // Configurar listeners para las búsquedas
+        configurarListeners();
+    }
+    
+    private void configurarListeners() {
+        // Evento para búsqueda
+        campoEvento.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                filtrarEventos();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                filtrarEventos();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                filtrarEventos();
+            }
+        });
+
+        // Lugar para búsqueda
+        campoCorreo6.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                filtrarLugares();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                filtrarLugares();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                filtrarLugares();
+            }
+        });
+
+        // Organizador para búsqueda
+        campoCorreo7.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                filtrarOrganizadores();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                filtrarOrganizadores();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                filtrarOrganizadores();
+            }
+        });
+
+        // Selección de evento
+        jList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && jList.getSelectedIndex() != -1) {
+                int index = jList.getSelectedIndex();
+                eventoSeleccionado = listaEventos.get(index);
+                campoEvento.setText(eventoSeleccionado.getTitulo());
+            }
+        });
+
+        // Selección de lugar
+        jList2.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && jList2.getSelectedIndex() != -1) {
+                int index = jList2.getSelectedIndex();
+                lugarSeleccionado = listaLugaresFiltrados.get(index);
+                campoCorreo6.setText(lugarSeleccionado.getNombre());
+            }
+        });
+
+        // Selección de organizador
+        jList3.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && jList3.getSelectedIndex() != -1) {
+                int index = jList3.getSelectedIndex();
+                organizadorSeleccionado = listaOrganizadoresFiltrados.get(index);
+                campoCorreo7.setText(organizadorSeleccionado.getNombre());
+            }
+        });
+    }
+
+    private void cargarEventos() {
+        try {
+            listaEventos = CoordinadorNegocio.getInstancia().consultarTodosEventos();
+            modeloListaEventos.clear();
+            for (EventoDTO evento : listaEventos) {
+                modeloListaEventos.addElement(evento.getTitulo());
+            }
+        } catch (NegocioException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al cargar eventos: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void filtrarEventos() {
+        String filtro = campoEvento.getText().toLowerCase();
+        modeloListaEventos.clear();
+        for (EventoDTO evento : listaEventos) {
+            if (evento.getTitulo().toLowerCase().contains(filtro)) {
+                modeloListaEventos.addElement(evento.getTitulo());
+            }
+        }
+    }
+
+    private void filtrarLugares() {
+        String filtro = campoCorreo6.getText().toLowerCase();
+        modeloListaLugares.clear();
+        listaLugaresFiltrados.clear();
+
+        try {
+            List<LugarDTO> lugares = CoordinadorNegocio.getInstancia().buscarLugaresPorNombre(filtro);
+
+            for (LugarDTO lugar : lugares) {
+                modeloListaLugares.addElement(lugar.getNombre() + " - Capacidad: " + lugar.getCapacidad());
+                listaLugaresFiltrados.add(lugar);
+            }
+        } catch (NegocioException ex) {
+            
+        }
+    }
+
+    private void filtrarOrganizadores() {
+        String filtro = campoCorreo7.getText().toLowerCase();
+        modeloListaOrganizadores.clear();
+        listaOrganizadoresFiltrados.clear();
+
+        try {
+            List<OrganizadorDTO> organizadores = CoordinadorNegocio.getInstancia().consultarTodosOrganizadores();
+
+            for (OrganizadorDTO organizador : organizadores) {
+                if (organizador.getNombre().toLowerCase().contains(filtro)) {
+                    modeloListaOrganizadores.addElement(organizador.getNombre());
+                    listaOrganizadoresFiltrados.add(organizador);
+                }
+            }
+        } catch (NegocioException ex) {
+            
+        }
+    }
+
+    private boolean validarCampos() {
+        if (campoNombreActividad.getText().trim().isEmpty()) {
+            mostrarError("El nombre de la actividad es obligatorio");
+            return false;
+        }
+
+        if (campoTipo.getText().trim().isEmpty()) {
+            mostrarError("El tipo de actividad es obligatorio");
+            return false;
+        }
+
+        if (eventoSeleccionado == null) {
+            mostrarError("Debe seleccionar un evento");
+            return false;
+        }
+
+        if (lugarSeleccionado == null) {
+            mostrarError("Debe seleccionar un lugar");
+            return false;
+        }
+
+        if (organizadorSeleccionado == null) {
+            mostrarError("Debe seleccionar un organizador");
+            return false;
+        }
+
+        try {
+            Integer.parseInt(campoCorreo5.getText());
+        } catch (NumberFormatException e) {
+            mostrarError("La capacidad debe ser un número entero");
+            return false;
+        }
+
+        try {
+            Integer.parseInt(campoDuracion.getText());
+        } catch (NumberFormatException e) {
+            mostrarError("La duración debe ser un número entero de minutos");
+            return false;
+        }
+
+        if (dateTimePicker.getDateTimeStrict() == null) {
+            mostrarError("Debe seleccionar una fecha y hora");
+            return false;
+        }
+
+        return true;
+    }
+
+    private void mostrarError(String mensaje) {
+        JOptionPane.showMessageDialog(this, mensaje, "Error de validación", JOptionPane.ERROR_MESSAGE);
     }
 
     /**
@@ -29,9 +272,9 @@ public class NuevaActividadForm extends javax.swing.JFrame {
         lblEvento = new javax.swing.JLabel();
         campoEvento = new javax.swing.JTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
-        listaEventos = new javax.swing.JList<>();
-        btnCancelar = new javax.swing.JButton();
-        btnGuardar = new javax.swing.JButton();
+        jList = new javax.swing.JList<>();
+        btnVolver = new javax.swing.JButton();
+        btnExportar = new javax.swing.JButton();
         lblTitulo = new javax.swing.JLabel();
         lblNombreActividad = new javax.swing.JLabel();
         lblTipo = new javax.swing.JLabel();
@@ -41,16 +284,16 @@ public class NuevaActividadForm extends javax.swing.JFrame {
         campoTipo = new javax.swing.JTextField();
         campoDuracion = new javax.swing.JTextField();
         dateTimePicker = new com.github.lgooddatepicker.components.DateTimePicker();
-        lblLugar = new javax.swing.JLabel();
-        campoCapacidad = new javax.swing.JTextField();
+        lblApellidoMaterno2 = new javax.swing.JLabel();
+        campoCorreo5 = new javax.swing.JTextField();
         lblCapacidad = new javax.swing.JLabel();
-        campoLugar = new javax.swing.JTextField();
+        campoCorreo6 = new javax.swing.JTextField();
         jScrollPane2 = new javax.swing.JScrollPane();
-        listaLugares = new javax.swing.JList<>();
-        lblOrganizador = new javax.swing.JLabel();
-        campoOrganizador = new javax.swing.JTextField();
+        jList2 = new javax.swing.JList<>();
+        lblApellidoMaterno4 = new javax.swing.JLabel();
+        campoCorreo7 = new javax.swing.JTextField();
         jScrollPane3 = new javax.swing.JScrollPane();
-        listaOrganizadores = new javax.swing.JList<>();
+        jList3 = new javax.swing.JList<>();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setBackground(new java.awt.Color(217, 217, 217));
@@ -63,28 +306,28 @@ public class NuevaActividadForm extends javax.swing.JFrame {
         campoEvento.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         campoEvento.setForeground(new java.awt.Color(0, 0, 0));
 
-        listaEventos.setBackground(new java.awt.Color(255, 255, 255));
-        listaEventos.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        listaEventos.setForeground(new java.awt.Color(0, 0, 0));
-        jScrollPane1.setViewportView(listaEventos);
+        jList.setBackground(new java.awt.Color(255, 255, 255));
+        jList.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        jList.setForeground(new java.awt.Color(0, 0, 0));
+        jScrollPane1.setViewportView(jList);
 
-        btnCancelar.setBackground(new java.awt.Color(0, 0, 0));
-        btnCancelar.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
-        btnCancelar.setForeground(new java.awt.Color(255, 255, 255));
-        btnCancelar.setText("Cancelar");
-        btnCancelar.addActionListener(new java.awt.event.ActionListener() {
+        btnVolver.setBackground(new java.awt.Color(0, 0, 0));
+        btnVolver.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        btnVolver.setForeground(new java.awt.Color(255, 255, 255));
+        btnVolver.setText("Cancelar");
+        btnVolver.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnCancelarActionPerformed(evt);
+                btnVolverActionPerformed(evt);
             }
         });
 
-        btnGuardar.setBackground(new java.awt.Color(0, 0, 0));
-        btnGuardar.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
-        btnGuardar.setForeground(new java.awt.Color(255, 255, 255));
-        btnGuardar.setText("Guardar");
-        btnGuardar.addActionListener(new java.awt.event.ActionListener() {
+        btnExportar.setBackground(new java.awt.Color(0, 0, 0));
+        btnExportar.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        btnExportar.setForeground(new java.awt.Color(255, 255, 255));
+        btnExportar.setText("Guardar");
+        btnExportar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnGuardarActionPerformed(evt);
+                btnExportarActionPerformed(evt);
             }
         });
 
@@ -121,44 +364,44 @@ public class NuevaActividadForm extends javax.swing.JFrame {
         campoDuracion.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         campoDuracion.setForeground(new java.awt.Color(0, 0, 0));
 
-        lblLugar.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
-        lblLugar.setForeground(new java.awt.Color(0, 0, 0));
-        lblLugar.setText("Seleccionar lugar:");
+        lblApellidoMaterno2.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        lblApellidoMaterno2.setForeground(new java.awt.Color(0, 0, 0));
+        lblApellidoMaterno2.setText("Seleccionar lugar:");
 
-        campoCapacidad.setBackground(new java.awt.Color(255, 255, 255));
-        campoCapacidad.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        campoCapacidad.setForeground(new java.awt.Color(0, 0, 0));
+        campoCorreo5.setBackground(new java.awt.Color(255, 255, 255));
+        campoCorreo5.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        campoCorreo5.setForeground(new java.awt.Color(0, 0, 0));
 
         lblCapacidad.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
         lblCapacidad.setForeground(new java.awt.Color(0, 0, 0));
         lblCapacidad.setText("Capacidad:");
 
-        campoLugar.setBackground(new java.awt.Color(255, 255, 255));
-        campoLugar.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        campoLugar.setForeground(new java.awt.Color(0, 0, 0));
+        campoCorreo6.setBackground(new java.awt.Color(255, 255, 255));
+        campoCorreo6.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        campoCorreo6.setForeground(new java.awt.Color(0, 0, 0));
 
-        listaLugares.setBackground(new java.awt.Color(255, 255, 255));
-        listaLugares.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        listaLugares.setForeground(new java.awt.Color(0, 0, 0));
-        jScrollPane2.setViewportView(listaLugares);
+        jList2.setBackground(new java.awt.Color(255, 255, 255));
+        jList2.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        jList2.setForeground(new java.awt.Color(0, 0, 0));
+        jScrollPane2.setViewportView(jList2);
 
-        lblOrganizador.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
-        lblOrganizador.setForeground(new java.awt.Color(0, 0, 0));
-        lblOrganizador.setText("Seleccionar organizador:");
+        lblApellidoMaterno4.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        lblApellidoMaterno4.setForeground(new java.awt.Color(0, 0, 0));
+        lblApellidoMaterno4.setText("Seleccionar organizador:");
 
-        campoOrganizador.setBackground(new java.awt.Color(255, 255, 255));
-        campoOrganizador.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        campoOrganizador.setForeground(new java.awt.Color(0, 0, 0));
-        campoOrganizador.addActionListener(new java.awt.event.ActionListener() {
+        campoCorreo7.setBackground(new java.awt.Color(255, 255, 255));
+        campoCorreo7.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        campoCorreo7.setForeground(new java.awt.Color(0, 0, 0));
+        campoCorreo7.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                campoOrganizadorActionPerformed(evt);
+                campoCorreo7ActionPerformed(evt);
             }
         });
 
-        listaOrganizadores.setBackground(new java.awt.Color(255, 255, 255));
-        listaOrganizadores.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        listaOrganizadores.setForeground(new java.awt.Color(0, 0, 0));
-        jScrollPane3.setViewportView(listaOrganizadores);
+        jList3.setBackground(new java.awt.Color(255, 255, 255));
+        jList3.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        jList3.setForeground(new java.awt.Color(0, 0, 0));
+        jScrollPane3.setViewportView(jList3);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -167,9 +410,9 @@ public class NuevaActividadForm extends javax.swing.JFrame {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(campoOrganizador, javax.swing.GroupLayout.PREFERRED_SIZE, 390, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(campoCorreo7, javax.swing.GroupLayout.PREFERRED_SIZE, 390, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 390, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lblOrganizador, javax.swing.GroupLayout.PREFERRED_SIZE, 286, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(lblApellidoMaterno4, javax.swing.GroupLayout.PREFERRED_SIZE, 286, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(556, 556, 556))
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -192,7 +435,7 @@ public class NuevaActividadForm extends javax.swing.JFrame {
                                     .addGroup(layout.createSequentialGroup()
                                         .addComponent(lblCapacidad, javax.swing.GroupLayout.PREFERRED_SIZE, 143, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(campoCapacidad, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                        .addComponent(campoCorreo5, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)))
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addGroup(layout.createSequentialGroup()
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -206,15 +449,15 @@ public class NuevaActividadForm extends javax.swing.JFrame {
                                             .addComponent(campoNombreActividad, javax.swing.GroupLayout.PREFERRED_SIZE, 390, javax.swing.GroupLayout.PREFERRED_SIZE)
                                             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                                                 .addGroup(layout.createSequentialGroup()
-                                                    .addComponent(btnCancelar, javax.swing.GroupLayout.PREFERRED_SIZE, 143, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                    .addComponent(btnVolver, javax.swing.GroupLayout.PREFERRED_SIZE, 143, javax.swing.GroupLayout.PREFERRED_SIZE)
                                                     .addGap(35, 35, 35)
-                                                    .addComponent(btnGuardar, javax.swing.GroupLayout.PREFERRED_SIZE, 151, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                    .addComponent(btnExportar, javax.swing.GroupLayout.PREFERRED_SIZE, 151, javax.swing.GroupLayout.PREFERRED_SIZE))
                                                 .addGroup(layout.createSequentialGroup()
-                                                    .addComponent(lblLugar, javax.swing.GroupLayout.PREFERRED_SIZE, 224, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                    .addComponent(lblApellidoMaterno2, javax.swing.GroupLayout.PREFERRED_SIZE, 224, javax.swing.GroupLayout.PREFERRED_SIZE)
                                                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                                         .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 390, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addComponent(campoLugar, javax.swing.GroupLayout.PREFERRED_SIZE, 390, javax.swing.GroupLayout.PREFERRED_SIZE))))))
+                                                        .addComponent(campoCorreo6, javax.swing.GroupLayout.PREFERRED_SIZE, 390, javax.swing.GroupLayout.PREFERRED_SIZE))))))
                                     .addGroup(layout.createSequentialGroup()
                                         .addGap(288, 288, 288)
                                         .addComponent(dateTimePicker, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))))
@@ -249,24 +492,24 @@ public class NuevaActividadForm extends javax.swing.JFrame {
                 .addComponent(dateTimePicker, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblLugar)
+                    .addComponent(lblApellidoMaterno2)
                     .addComponent(lblCapacidad)
-                    .addComponent(campoCapacidad, javax.swing.GroupLayout.DEFAULT_SIZE, 34, Short.MAX_VALUE)
-                    .addComponent(campoLugar))
+                    .addComponent(campoCorreo5, javax.swing.GroupLayout.DEFAULT_SIZE, 34, Short.MAX_VALUE)
+                    .addComponent(campoCorreo6))
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(100, 100, 100)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(btnGuardar, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnCancelar, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(btnExportar, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnVolver, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(40, 40, 40))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(46, 46, 46)
-                        .addComponent(lblOrganizador)
+                        .addComponent(lblApellidoMaterno4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(campoOrganizador)
+                        .addComponent(campoCorreo7)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(64, 64, 64))))
@@ -275,78 +518,102 @@ public class NuevaActividadForm extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnCancelarActionPerformed
+    private void btnVolverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVolverActionPerformed
+        int confirmacion = JOptionPane.showConfirmDialog(this,
+                "¿Está seguro de cancelar? Se perderán los datos ingresados",
+                "Confirmar cancelación", JOptionPane.YES_NO_OPTION);
 
-    private void btnGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnGuardarActionPerformed
+        if (confirmacion == JOptionPane.YES_OPTION) {
+            CoordinadorAplicacion.getInstancia().mostrarModuloActividades();
+            this.dispose();
+        }
+    }//GEN-LAST:event_btnVolverActionPerformed
 
-    private void campoOrganizadorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_campoOrganizadorActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_campoOrganizadorActionPerformed
+    private void btnExportarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExportarActionPerformed
+        if (!validarCampos()) {
+            return;
+        }
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
+            // Crear DTO con los datos de la actividad
+            ActividadCreacionDTO nuevaActividad = new ActividadCreacionDTO();
+            nuevaActividad.setNombre(campoNombreActividad.getText().trim());
+            nuevaActividad.setTipo(campoTipo.getText().trim());
+            nuevaActividad.setCapacidad(Integer.parseInt(campoCorreo5.getText().trim()));
+            nuevaActividad.setDuracion(Integer.parseInt(campoDuracion.getText().trim()));
+            nuevaActividad.setFechaHoraInicio(dateTimePicker.getDateTimeStrict());
+
+            // En lugar de IDs, usar los objetos completos o propiedades naturales
+            nuevaActividad.setNombreEvento(eventoSeleccionado.getTitulo());
+            nuevaActividad.setNombreLugar(lugarSeleccionado.getNombre());
+            nuevaActividad.setNombreOrganizador(organizadorSeleccionado.getNombre());
+
+            // Verificar si hay conflictos de horario
+            boolean hayConflicto = CoordinadorNegocio.getInstancia()
+                    .verificarConflictosHorario(nuevaActividad, lugarSeleccionado.getNombre());
+
+            if (hayConflicto) {
+                int confirmacion = JOptionPane.showConfirmDialog(this,
+                        "Existe un conflicto de horario con otra actividad en el mismo lugar.\n"
+                        + "¿Desea continuar de todos modos?",
+                        "Conflicto de horario", JOptionPane.YES_NO_OPTION);
+
+                if (confirmacion != JOptionPane.YES_OPTION) {
+                    return;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(NuevaActividadForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(NuevaActividadForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(NuevaActividadForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(NuevaActividadForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new NuevaActividadForm().setVisible(true);
-            }
-        });
-    }
+            // Registrar la actividad
+            CoordinadorNegocio.getInstancia().registrarActividad(nuevaActividad);
+
+            JOptionPane.showMessageDialog(this,
+                    "Actividad registrada correctamente",
+                    "Éxito", JOptionPane.INFORMATION_MESSAGE);
+
+            // Volver al módulo de actividades
+            CoordinadorAplicacion.getInstancia().mostrarModuloActividades();
+            this.dispose();
+
+        } catch (NegocioException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al registrar la actividad: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error en los datos numéricos: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_btnExportarActionPerformed
+
+    private void campoCorreo7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_campoCorreo7ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_campoCorreo7ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnCancelar;
-    private javax.swing.JButton btnGuardar;
-    private javax.swing.JTextField campoCapacidad;
+    private javax.swing.JButton btnExportar;
+    private javax.swing.JButton btnVolver;
+    private javax.swing.JTextField campoCorreo5;
+    private javax.swing.JTextField campoCorreo6;
+    private javax.swing.JTextField campoCorreo7;
     private javax.swing.JTextField campoDuracion;
     private javax.swing.JTextField campoEvento;
-    private javax.swing.JTextField campoLugar;
     private javax.swing.JTextField campoNombreActividad;
-    private javax.swing.JTextField campoOrganizador;
     private javax.swing.JTextField campoTipo;
     private com.github.lgooddatepicker.components.DateTimePicker dateTimePicker;
+    private javax.swing.JList<String> jList;
+    private javax.swing.JList<String> jList2;
+    private javax.swing.JList<String> jList3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JLabel lblApellidoMaterno2;
+    private javax.swing.JLabel lblApellidoMaterno4;
     private javax.swing.JLabel lblCapacidad;
     private javax.swing.JLabel lblDuracion;
     private javax.swing.JLabel lblEvento;
     private javax.swing.JLabel lblFechaHora;
-    private javax.swing.JLabel lblLugar;
     private javax.swing.JLabel lblNombreActividad;
-    private javax.swing.JLabel lblOrganizador;
     private javax.swing.JLabel lblTipo;
     private javax.swing.JLabel lblTitulo;
-    private javax.swing.JList<String> listaEventos;
-    private javax.swing.JList<String> listaLugares;
-    private javax.swing.JList<String> listaOrganizadores;
     // End of variables declaration//GEN-END:variables
 }

@@ -40,6 +40,7 @@ public class OrganizadorMapper {
         Integer totalEventos = organizador.getEventos().size();
 
         OrganizadorDTO dto = new OrganizadorDTO();
+        dto.setIdOrganizador(organizador.getId());
         dto.setNombre(organizador.getNombre());
         dto.setCorreo(organizador.getCorreo());
         dto.setTipoOrganizador(organizador.getTipoOrganizador().toString());
@@ -78,6 +79,7 @@ public class OrganizadorMapper {
         }
 
         Organizador organizador = new Organizador();
+        organizador.setId(organizadorDTO.getIdOrganizador());
         organizador.setNombre(organizadorDTO.getNombre());
         organizador.setCorreo(organizadorDTO.getCorreo());
 
@@ -106,6 +108,7 @@ public class OrganizadorMapper {
             return;
         }
 
+        organizador.setId(organizadorDTO.getIdOrganizador());
         organizador.setNombre(organizadorDTO.getNombre());
         organizador.setCorreo(organizadorDTO.getCorreo());
 

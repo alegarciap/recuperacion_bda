@@ -12,6 +12,11 @@ package DTOs;
  * @author Alejandra García Preciado - 252444
  */
 public class OrganizadorDTO {
+    
+    /**
+     * Identificador único del organizador.
+     */
+    private Long idOrganizador;
 
     /**
      * Nombre del organizador.
@@ -40,6 +45,23 @@ public class OrganizadorDTO {
     }
 
     /**
+     * Constructor con todos los atributos.
+     *
+     * @param idOrganizador Identificador único del organizador.
+     * @param nombre Nombre del organizador
+     * @param correo Correo electrónico
+     * @param tipoOrganizador Tipo de organizador
+     * @param totalEventos Número de eventos organizados
+     */
+    public OrganizadorDTO(Long idOrganizador, String nombre, String correo, String tipoOrganizador, Integer totalEventos) {
+        this.idOrganizador = idOrganizador;
+        this.nombre = nombre;
+        this.correo = correo;
+        this.tipoOrganizador = tipoOrganizador;
+        this.totalEventos = totalEventos;
+    }
+    
+    /**
      * Constructor con los atributos principales.
      *
      * @param nombre Nombre del organizador
@@ -54,7 +76,7 @@ public class OrganizadorDTO {
     }
 
     /**
-     * Constructor con todos los atributos.
+     * Constructor con todos los atributos menos el identificador.
      *
      * @param nombre Nombre del organizador
      * @param correo Correo electrónico
@@ -66,6 +88,14 @@ public class OrganizadorDTO {
         this.correo = correo;
         this.tipoOrganizador = tipoOrganizador;
         this.totalEventos = totalEventos;
+    }
+
+    public Long getIdOrganizador() {
+        return idOrganizador;
+    }
+
+    public void setIdOrganizador(Long idOrganizador) {
+        this.idOrganizador = idOrganizador;
     }
     
     /**

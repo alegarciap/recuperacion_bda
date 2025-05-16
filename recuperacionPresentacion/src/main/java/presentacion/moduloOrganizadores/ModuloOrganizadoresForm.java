@@ -4,17 +4,142 @@
  */
 package presentacion.moduloOrganizadores;
 
+import DTOs.OrganizadorDTO;
+import control.CoordinadorAplicacion;
+import control.CoordinadorNegocio;
+import exception.NegocioException;
+import java.util.List;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+
 /**
+ * Formulario para el módulo de organizadores. Permite listar, filtrar y
+ * eliminar organizadores, así como acceder al formulario para crear nuevos
+ * organizadores.
  *
- * @author alega
+ * @author Alejandra García 252444
  */
 public class ModuloOrganizadoresForm extends javax.swing.JFrame {
+    
+    private final CoordinadorAplicacion coordinadorAplicacion;
+    private final CoordinadorNegocio coordinadorNegocio;
+    private List<OrganizadorDTO> listaOrganizadores;
+    private DefaultTableModel modeloTabla;
 
     /**
      * Creates new form ModuloOrganizadoresForm
      */
     public ModuloOrganizadoresForm() {
         initComponents();
+        this.coordinadorAplicacion = CoordinadorAplicacion.getInstancia();
+        this.coordinadorNegocio = CoordinadorNegocio.getInstancia();
+
+        // Configurar tabla
+        configurarTabla();
+
+        // Cargar datos iniciales
+        cargarOrganizadores();
+
+        // Configurar acción del combobox
+        this.cbTipoOrganizador.addActionListener((e) -> filtrarOrganizadores());
+
+        // Centrar formulario en pantalla
+        this.setLocationRelativeTo(null);
+    }
+    
+    /**
+     * Configura la tabla de organizadores.
+     */
+    private void configurarTabla() {
+        modeloTabla = new DefaultTableModel() {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        // Definir columnas
+        modeloTabla.addColumn("ID");
+        modeloTabla.addColumn("Nombre");
+        modeloTabla.addColumn("Correo");
+        modeloTabla.addColumn("Tipo");
+        modeloTabla.addColumn("Eventos");
+
+        // Ocultar columna ID
+        tblOrganizadores.setModel(modeloTabla);
+        tblOrganizadores.getColumnModel().getColumn(0).setMinWidth(0);
+        tblOrganizadores.getColumnModel().getColumn(0).setMaxWidth(0);
+        tblOrganizadores.getColumnModel().getColumn(0).setWidth(0);
+    }
+
+    /**
+     * Carga la lista de organizadores desde la capa de negocio.
+     */
+    private void cargarOrganizadores() {
+        try {
+            listaOrganizadores = coordinadorNegocio.consultarTodosOrganizadores();
+            actualizarTabla(listaOrganizadores);
+        } catch (NegocioException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al cargar organizadores: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /**
+     * Actualiza la tabla con la lista de organizadores proporcionada.
+     *
+     * @param organizadores Lista de organizadores a mostrar
+     */
+    private void actualizarTabla(List<OrganizadorDTO> organizadores) {
+        // Limpiar tabla
+        modeloTabla.setRowCount(0);
+
+        // Agregar filas
+        for (OrganizadorDTO organizador : organizadores) {
+            modeloTabla.addRow(new Object[]{
+                organizador.getIdOrganizador(), 
+                organizador.getNombre(),
+                organizador.getCorreo(),
+                organizador.getTipoOrganizador(),
+                organizador.getTotalEventos()
+            });
+        }
+    }
+
+    /**
+     * Filtra la lista de organizadores según el tipo seleccionado.
+     */
+    private void filtrarOrganizadores() {
+        String tipoSeleccionado = cbTipoOrganizador.getSelectedItem().toString();
+
+        try {
+            if ("Todos".equals(tipoSeleccionado)) {
+                listaOrganizadores = coordinadorNegocio.consultarTodosOrganizadores();
+            } else {
+                listaOrganizadores = coordinadorNegocio.consultarOrganizadoresPorTipo(tipoSeleccionado.toUpperCase());
+            }
+
+            actualizarTabla(listaOrganizadores);
+        } catch (NegocioException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al filtrar organizadores: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /**
+     * Obtiene el ID del organizador seleccionado en la tabla.
+     *
+     * @return ID del organizador o null si no hay selección
+     */
+    private Long obtenerIdSeleccionado() {
+        int filaSeleccionada = tblOrganizadores.getSelectedRow();
+        if (filaSeleccionada == -1) {
+            return null;
+        }
+
+        return (Long) modeloTabla.getValueAt(filaSeleccionada, 0);
     }
 
     /**
@@ -56,17 +181,17 @@ public class ModuloOrganizadoresForm extends javax.swing.JFrame {
         tblOrganizadores.setForeground(new java.awt.Color(0, 0, 0));
         tblOrganizadores.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null}
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
             },
             new String [] {
-                "Nombre", "Correo", "Tipo"
+                "ID", "Nombre", "Correo", "Tipo"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false
+                false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -159,51 +284,43 @@ public class ModuloOrganizadoresForm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnNuevoOrganizadorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNuevoOrganizadorActionPerformed
-        // TODO add your handling code here:
+        coordinadorAplicacion.mostrarNuevoOrganizador();
+        this.dispose();
     }//GEN-LAST:event_btnNuevoOrganizadorActionPerformed
 
     private void btnEliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarActionPerformed
-        // TODO add your handling code here:
+        Long idSeleccionado = obtenerIdSeleccionado();
+
+        if (idSeleccionado == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Debe seleccionar un organizador para eliminar",
+                    "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int confirmacion = JOptionPane.showConfirmDialog(this,
+                "¿Está seguro de eliminar este organizador?",
+                "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
+
+        if (confirmacion == JOptionPane.YES_OPTION) {
+            try {
+                coordinadorNegocio.eliminarOrganizador(idSeleccionado);
+                JOptionPane.showMessageDialog(this,
+                        "Organizador eliminado correctamente",
+                        "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                cargarOrganizadores(); // Recargar la lista
+            } catch (NegocioException ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Error al eliminar organizador: " + ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }//GEN-LAST:event_btnEliminarActionPerformed
 
     private void btnVolverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVolverActionPerformed
-        // TODO add your handling code here:
+        coordinadorAplicacion.mostrarMenuPrincipal();
+        this.dispose();
     }//GEN-LAST:event_btnVolverActionPerformed
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(ModuloOrganizadoresForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(ModuloOrganizadoresForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(ModuloOrganizadoresForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(ModuloOrganizadoresForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new ModuloOrganizadoresForm().setVisible(true);
-            }
-        });
-    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnEliminar;

@@ -22,7 +22,7 @@ public class Conexion {
      * cuando se requiera, para el manejo de las operaciones CRUD con la base de
      * datos.
      */
-    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("ConexionPU"); // solo un factory en toda la aplicación
+    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("com.mycompany_recuperacionDominio_jar_1.0-SNAPSHOTPU"); // solo un factory en toda la aplicación
 
     /**
      * Crea una nueva conexión con la base de datos.

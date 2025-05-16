@@ -4,17 +4,95 @@
  */
 package presentacion;
 
+import control.CoordinadorAplicacion;
+
 /**
+ * Formulario principal que muestra el menú de opciones del sistema. Permite
+ * acceder a los diferentes módulos de la aplicación.
  *
- * @author alega
+ * @author Alejandra García Preciado - 252444
  */
 public class MenuPrincipalForm extends javax.swing.JFrame {
+    
+    /**
+     * Instancia del coordinador de la aplicación.
+     */
+    private final CoordinadorAplicacion coordinador;
 
     /**
      * Creates new form MenuPrincipalForm
      */
     public MenuPrincipalForm() {
         initComponents();
+        this.coordinador = CoordinadorAplicacion.getInstancia();
+        this.setLocationRelativeTo(null);
+        this.setTitle("ConectaITSON - Menú Principal");
+        configurarEventosComponentes();
+    }
+    
+    /**
+     * Configura los eventos de clic para los componentes del formulario.
+     */
+    private void configurarEventosComponentes() {
+        // Configurar evento de clic para el módulo de eventos
+        lblEventos.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                lblEventosMouseClicked(evt);
+            }
+        });
+
+        // Configurar evento de clic para el módulo de participantes
+        lblParticipantes.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                lblParticipantesMouseClicked(evt);
+            }
+        });
+
+        // Configurar evento de clic para el módulo de actividades
+        lblActividades.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                lblActividadesMouseClicked(evt);
+            }
+        });
+
+        // Configurar evento de clic para el módulo de organizadores
+        lblOrganizadores.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                lblOrganizadoresMouseClicked(evt);
+            }
+        });
+    }
+
+    /**
+     * Método que maneja el evento de clic en el módulo de eventos.
+     */
+    private void lblEventosMouseClicked(java.awt.event.MouseEvent evt) {
+        coordinador.mostrarModuloEventos();
+    }
+
+    /**
+     * Método que maneja el evento de clic en el módulo de participantes.
+     */
+    private void lblParticipantesMouseClicked(java.awt.event.MouseEvent evt) {
+        coordinador.mostrarModuloParticipantes();
+    }
+
+    /**
+     * Método que maneja el evento de clic en el módulo de actividades.
+     */
+    private void lblActividadesMouseClicked(java.awt.event.MouseEvent evt) {
+        coordinador.mostrarModuloActividades();
+    }
+
+    /**
+     * Método que maneja el evento de clic en el módulo de organizadores.
+     */
+    private void lblOrganizadoresMouseClicked(java.awt.event.MouseEvent evt) {
+        coordinador.mostrarModuloOrganizadores();
     }
 
     /**
@@ -129,41 +207,6 @@ public class MenuPrincipalForm extends javax.swing.JFrame {
     private void btnCargaInicialActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCargaInicialActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_btnCargaInicialActionPerformed
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(MenuPrincipalForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(MenuPrincipalForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(MenuPrincipalForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(MenuPrincipalForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new MenuPrincipalForm().setVisible(true);
-            }
-        });
-    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCargaInicial;

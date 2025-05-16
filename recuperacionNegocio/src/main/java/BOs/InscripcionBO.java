@@ -18,7 +18,10 @@ import interfaces.IInscripcionBO;
 import interfaces.IInscripcionDAO;
 import interfaces.IParticipanteDAO;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.stream.Collectors;
 import mapper.InscripcionMapper;
 
 /**
@@ -140,70 +143,116 @@ public class InscripcionBO implements IInscripcionBO {
     }
 
     /**
-     * Registra la asistencia de un participante a una actividad.
+     * Obtiene todas las inscripciones de una actividad identificada por nombre
+     * y fecha.
      *
-     * @param id ID de la inscripción
-     * @param asistio true si el participante asistió, false si no asistió
-     * @return DTO con la información actualizada
-     * @throws NegocioException Si hay errores de validación o persistencia
-     */
-    @Override
-    public InscripcionDTO registrarAsistencia(Long id, boolean asistio) throws NegocioException {
-        try {
-            // Verificar que la inscripción exista
-            Inscripcion inscripcion = inscripcionDAO.buscarPorId(id);
-            if (inscripcion == null) {
-                throw new NegocioException("La inscripción con ID " + id + " no existe.");
-            }
-
-            // Actualizar el estado de asistencia
-            EstadoAsistencia nuevoEstado = asistio ? EstadoAsistencia.ASISTIO : EstadoAsistencia.NO_ASISTIO;
-
-            // Si el estado actual ya es el mismo que se intenta establecer, no hacer nada
-            if (inscripcion.getEstadoAsistencia() == nuevoEstado) {
-                return inscripcionMapper.toDTO(inscripcion);
-            }
-
-            // Actualizar estado y aplicar cambios en contador de asistencias
-            inscripcionMapper.updateEstadoAsistencia(inscripcion, nuevoEstado.toString());
-
-            // Guardar cambios
-            inscripcion = inscripcionDAO.actualizar(inscripcion);
-
-            // Retornar el DTO actualizado
-            return inscripcionMapper.toDTO(inscripcion);
-
-        } catch (PersistenciaException ex) {
-            throw new NegocioException("Error al registrar la asistencia: " + ex.getMessage());
-        }
-    }
-
-    /**
-     * Obtiene todas las inscripciones de una actividad.
-     *
-     * @param actividadId ID de la actividad
+     * @param nombreActividad Nombre de la actividad
+     * @param fechaHoraStr Fecha y hora de inicio en formato string
      * @return Lista de DTOs con la información de las inscripciones
      * @throws NegocioException Si hay errores de persistencia
      */
     @Override
-    public List<InscripcionDTO> consultarPorActividad(Long actividadId) throws NegocioException {
+    public List<InscripcionDTO> consultarPorActividad(String nombreActividad, String fechaHoraStr) throws NegocioException {
         try {
-            if (actividadId == null) {
-                throw new NegocioException("El ID de la actividad no puede ser nulo.");
+            // Convertir la fecha/hora de string a LocalDateTime
+            LocalDateTime fechaHora;
+            try {
+                // Intentar diferentes formatos de fecha/hora
+                DateTimeFormatter formatter;
+                if (fechaHoraStr.contains("T")) {
+                    formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+                } else if (fechaHoraStr.contains("/")) {
+                    formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+                } else {
+                    formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                }
+                fechaHora = LocalDateTime.parse(fechaHoraStr, formatter);
+            } catch (DateTimeParseException ex) {
+                throw new NegocioException("Formato de fecha/hora inválido: " + fechaHoraStr);
             }
 
-            // Verificar que la actividad exista
-            Actividad actividad = actividadDAO.buscarPorId(actividadId);
-            if (actividad == null) {
-                throw new NegocioException("La actividad con ID " + actividadId + " no existe.");
+            // Buscar actividades que coincidan con nombre y fecha
+            List<Actividad> actividades = actividadDAO.consultarTodos().stream()
+                    .filter(a -> a.getNombre().equals(nombreActividad)
+                    && a.getFechaHoraInicio().isEqual(fechaHora))
+                    .collect(Collectors.toList());
+
+            if (actividades.isEmpty()) {
+                throw new NegocioException("No se encontró la actividad especificada.");
             }
+
+            // Tomar la primera actividad que coincida
+            Actividad actividad = actividades.get(0);
 
             // Consultar inscripciones
             List<Inscripcion> inscripciones = inscripcionDAO.consultarPorActividad(actividad);
             return inscripcionMapper.toDTOList(inscripciones);
-
         } catch (PersistenciaException ex) {
             throw new NegocioException("Error al consultar inscripciones por actividad: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Registra la asistencia de un participante a una actividad.
+     *
+     * @param inscripcionDTO Objeto InscripcionDTO con la información de la
+     * inscripción
+     * @param asistio true si el participante asistió, false si no asistió
+     * @throws NegocioException Si hay errores de validación o persistencia
+     */
+    @Override
+    public void registrarAsistencia(InscripcionDTO inscripcionDTO, boolean asistio) throws NegocioException {
+        try {
+            // Buscar la inscripción por los datos proporcionados
+            // Buscar la actividad por nombre
+            List<Actividad> actividades = actividadDAO.consultarTodos().stream()
+                    .filter(a -> a.getNombre().equals(inscripcionDTO.getNombreActividad()))
+                    .collect(Collectors.toList());
+
+            if (actividades.isEmpty()) {
+                throw new NegocioException("No se encontró la actividad especificada.");
+            }
+
+            // Buscar la inscripción adecuada
+            Inscripcion inscripcionEncontrada = null;
+
+            for (Actividad actividad : actividades) {
+                List<Inscripcion> inscripciones = inscripcionDAO.consultarPorActividad(actividad);
+                for (Inscripcion insc : inscripciones) {
+                    // Verificar si coincide con los datos del DTO
+                    String nombreCompleto = insc.getParticipante().getNombre() + " "
+                            + insc.getParticipante().getApellidoPaterno() + " "
+                            + insc.getParticipante().getApellidoMaterno();
+
+                    if (nombreCompleto.equals(inscripcionDTO.getNombreParticipante())
+                            && insc.getParticipante().getCorreo().equals(inscripcionDTO.getCorreoParticipante())) {
+                        inscripcionEncontrada = insc;
+                        break;
+                    }
+                }
+
+                if (inscripcionEncontrada != null) {
+                    break;
+                }
+            }
+
+            if (inscripcionEncontrada == null) {
+                throw new NegocioException("No se encontró la inscripción especificada.");
+            }
+
+            // Actualizar estado y aplicar cambios en contador de asistencias
+            EstadoAsistencia nuevoEstado;
+            if (asistio) {
+                nuevoEstado = EstadoAsistencia.ASISTIO;
+            } else {
+                nuevoEstado = EstadoAsistencia.NO_ASISTIO;
+            }
+            inscripcionMapper.updateEstadoAsistencia(inscripcionEncontrada, nuevoEstado.toString());
+
+            // Guardar cambios
+            inscripcionDAO.actualizar(inscripcionEncontrada);
+        } catch (PersistenciaException ex) {
+            throw new NegocioException("Error al registrar la asistencia: " + ex.getMessage());
         }
     }
 

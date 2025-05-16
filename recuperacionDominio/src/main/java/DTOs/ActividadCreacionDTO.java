@@ -41,14 +41,19 @@ public class ActividadCreacionDTO {
     private Integer duracion;
 
     /**
-     * ID del evento al que pertenece la actividad.
+     * Nombre del evento al que pertenece la actividad.
      */
-    private Long eventoId;
+    private String nombreEvento;
 
     /**
-     * ID del lugar donde se realizará la actividad.
+     * Nombre del lugar donde se realizará la actividad.
      */
-    private Long lugarId;
+    private String nombreLugar;
+    
+    /**
+     * Nombre del organizador de la actividad.
+     */
+    private String nombreOrganizador;
 
     /**
      * Constructor por defecto.
@@ -64,20 +69,21 @@ public class ActividadCreacionDTO {
      * @param fechaHoraInicio Fecha y hora de inicio
      * @param capacidad Capacidad máxima de participantes
      * @param duracion Duración estimada en minutos
-     * @param eventoId ID del evento al que pertenece
-     * @param lugarId ID del lugar donde se realizará
+     * @param nombreEvento Nombre del evento al que pertenece
+     * @param nombreLugar Nombre del lugar donde se realizará
+     * @param nombreOrganizador Nombre del organizador de la actividad
      */
-    public ActividadCreacionDTO(String nombre, String tipo, LocalDateTime fechaHoraInicio,
-            Integer capacidad, Integer duracion, Long eventoId, Long lugarId) {
+    public ActividadCreacionDTO(String nombre, String tipo, LocalDateTime fechaHoraInicio, Integer capacidad, Integer duracion, String nombreEvento, String nombreLugar, String nombreOrganizador) {
         this.nombre = nombre;
         this.tipo = tipo;
         this.fechaHoraInicio = fechaHoraInicio;
         this.capacidad = capacidad;
         this.duracion = duracion;
-        this.eventoId = eventoId;
-        this.lugarId = lugarId;
+        this.nombreEvento = nombreEvento;
+        this.nombreLugar = nombreLugar;
+        this.nombreOrganizador = nombreOrganizador;
     }
-    
+
     /**
      * Obtiene el nombre de la actividad.
      *
@@ -169,39 +175,57 @@ public class ActividadCreacionDTO {
     }
 
     /**
-     * Obtiene el ID del evento al que pertenece la actividad.
+     * Obtiene el nombre del evento al que pertenece la actividad.
      *
-     * @return El ID del evento
+     * @return El nombre del evento
      */
-    public Long getEventoId() {
-        return eventoId;
+    public String getNombreEvento() {
+        return nombreEvento;
     }
 
     /**
-     * Establece el ID del evento al que pertenece la actividad.
+     * Establece el nombre del evento al que pertenece la actividad.
      *
-     * @param eventoId El ID del evento a establecer
+     * @param nombreEvento El nombre del evento a establecer
      */
-    public void setEventoId(Long eventoId) {
-        this.eventoId = eventoId;
+    public void setNombreEvento(String nombreEvento) {
+        this.nombreEvento = nombreEvento;
     }
 
     /**
-     * Obtiene el ID del lugar donde se realizará la actividad.
+     * Obtiene el nombre del lugar donde se realizará la actividad.
      *
-     * @return El ID del lugar
+     * @return El nombre del lugar
      */
-    public Long getLugarId() {
-        return lugarId;
+    public String getNombreLugar() {
+        return nombreLugar;
     }
 
     /**
-     * Establece el ID del lugar donde se realizará la actividad.
+     * Establece el nombre del lugar donde se realizará la actividad.
      *
-     * @param lugarId El ID del lugar a establecer
+     * @param nombreLugar El nombre del lugar a establecer
      */
-    public void setLugarId(Long lugarId) {
-        this.lugarId = lugarId;
+    public void setNombreLugar(String nombreLugar) {
+        this.nombreLugar = nombreLugar;
     }
 
+    /**
+     * Obtiene el nombre del organizador que organiza la actividad.
+     *
+     * @return El nombre del organizador
+     */
+    public String getNombreOrganizador() {
+        return nombreOrganizador;
+    }
+    
+    /**
+     * Establece el nombre del organizador que organiza la actividad.
+     *
+     * @param nombreOrganizador El nombre del organizador a establecer
+     */
+    public void setNombreOrganizador(String nombreOrganizador) {
+        this.nombreOrganizador = nombreOrganizador;
+    }
+    
 }

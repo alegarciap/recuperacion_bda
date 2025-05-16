@@ -4,17 +4,95 @@
  */
 package presentacion.moduloActividades;
 
+import DTOs.ActividadDTO;
+import DTOs.ActividadDetalleDTO;
+import control.CoordinadorAplicacion;
+import control.CoordinadorNegocio;
+import exception.NegocioException;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import javax.swing.JOptionPane;
+
 /**
+ * Formulario para ver una actividad del módulo de actividades.
  *
- * @author alega
+ * @author Alejandra García 252444
  */
 public class VerActividadForm extends javax.swing.JFrame {
+    
+    public static ActividadDTO actividadSeleccionada;
+    private ActividadDetalleDTO actividadDetalle;
 
     /**
      * Creates new form VerActividad
      */
     public VerActividadForm() {
         initComponents();
+        this.setLocationRelativeTo(null);
+        this.setTitle("Ver Actividad");
+
+        if (actividadSeleccionada != null) {
+            cargarDatosActividad();
+        } else {
+            JOptionPane.showMessageDialog(this,
+                    "Error: No se especificó una actividad para visualizar",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            volverAModuloActividades();
+        }
+    }
+    
+    private void cargarDatosActividad() {
+        try {
+            // Obtener detalles de la actividad usando los datos de la actividad seleccionada
+            int indice = buscarIndiceActividad();
+
+            if (indice != -1) {
+                actividadDetalle = CoordinadorNegocio.getInstancia().consultarActividadDetalle(indice);
+            } else {
+                // Usar los datos básicos si no se puede obtener el detalle
+                actividadDetalle = null;
+            }
+
+            // Cargar datos en los campos
+            campoEvento.setText(actividadSeleccionada.getNombreEvento());
+            campoNombre.setText(actividadSeleccionada.getNombre());
+            campoTipo.setText(actividadSeleccionada.getTipo());
+            campoDuracion.setText(actividadSeleccionada.getDuracion() + " minutos");
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            campoFechaHora.setText(actividadSeleccionada.getFechaHoraInicio().format(formatter));
+
+            campoCapacidad.setText(actividadSeleccionada.getCapacidad().toString());
+            campoLugar.setText(actividadSeleccionada.getNombreLugar());
+
+            // Verificar si la actividad está finalizada para habilitar/deshabilitar botón
+            btnMarcarFinalizada.setEnabled(!actividadSeleccionada.getFinalizado());
+            if (actividadSeleccionada.getFinalizado()) {
+                btnMarcarFinalizada.setText("Actividad Finalizada");
+            }
+
+        } catch (NegocioException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al cargar datos de la actividad: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private int buscarIndiceActividad() throws NegocioException {
+        List<ActividadDTO> actividades = CoordinadorNegocio.getInstancia().consultarTodasActividades();
+        for (int i = 0; i < actividades.size(); i++) {
+            ActividadDTO act = actividades.get(i);
+            if (act.getNombre().equals(actividadSeleccionada.getNombre())
+                    && act.getFechaHoraInicio().equals(actividadSeleccionada.getFechaHoraInicio())) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private void volverAModuloActividades() {
+        CoordinadorAplicacion.getInstancia().mostrarModuloActividades();
+        this.dispose();
     }
 
     /**
@@ -263,52 +341,41 @@ public class VerActividadForm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnGestionarParticipantesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGestionarParticipantesActionPerformed
-        // TODO add your handling code here:
+        ParticipantesActividadForm.actividadSeleccionada = actividadSeleccionada;
+        CoordinadorAplicacion.getInstancia().mostrarParticipantesActividad();
+        this.dispose();
     }//GEN-LAST:event_btnGestionarParticipantesActionPerformed
 
     private void btnMarcarFinalizadaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMarcarFinalizadaActionPerformed
-        // TODO add your handling code here:
+        int confirmacion = JOptionPane.showConfirmDialog(this,
+                "¿Está seguro de marcar esta actividad como finalizada?",
+                "Confirmar finalización", JOptionPane.YES_NO_OPTION);
+
+        if (confirmacion == JOptionPane.YES_OPTION) {
+            try {
+                CoordinadorNegocio.getInstancia().finalizarActividad(actividadSeleccionada);
+                JOptionPane.showMessageDialog(this,
+                        "Actividad marcada como finalizada correctamente.",
+                        "Éxito", JOptionPane.INFORMATION_MESSAGE);
+
+                // Actualizar la vista
+                btnMarcarFinalizada.setEnabled(false);
+                btnMarcarFinalizada.setText("Actividad Finalizada");
+
+                // Actualizar el objeto actividadSeleccionada para mantener consistencia
+                actividadSeleccionada.setFinalizado(true);
+
+            } catch (NegocioException ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Error al finalizar actividad: " + ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }//GEN-LAST:event_btnMarcarFinalizadaActionPerformed
 
     private void btnVolverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVolverActionPerformed
-        // TODO add your handling code here:
+        volverAModuloActividades();
     }//GEN-LAST:event_btnVolverActionPerformed
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(VerActividadForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(VerActividadForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(VerActividadForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(VerActividadForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new VerActividadForm().setVisible(true);
-            }
-        });
-    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnGestionarParticipantes;

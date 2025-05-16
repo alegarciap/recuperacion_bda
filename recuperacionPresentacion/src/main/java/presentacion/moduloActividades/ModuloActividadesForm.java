@@ -4,17 +4,93 @@
  */
 package presentacion.moduloActividades;
 
+import DTOs.ActividadDTO;
+import control.CoordinadorAplicacion;
+import control.CoordinadorNegocio;
+import exception.NegocioException;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+
 /**
- *
- * @author alega
+ * Formulario para el módulo de actividades. 
+ * 
+ * @author Alejandra García 252444
  */
 public class ModuloActividadesForm extends javax.swing.JFrame {
+    
+    private List<ActividadDTO> listaActividades;
+    private int actividadSeleccionadaIndex = -1;
 
     /**
      * Creates new form ModuloActividadesForm
      */
     public ModuloActividadesForm() {
         initComponents();
+        this.setLocationRelativeTo(null);
+        this.setTitle("Módulo Actividades");
+        inicializarTabla();
+        cargarActividades();
+
+        // Desactivar botones que requieren selección
+        btnVerActividad.setEnabled(false);
+        btnEditarActividad.setEnabled(false);
+        btnGestionarParticipantes.setEnabled(false);
+
+        // Agregar listener para selección de tabla
+        tblActividades.getSelectionModel().addListSelectionListener(e -> {
+            actividadSeleccionadaIndex = tblActividades.getSelectedRow();
+            boolean filaSeleccionada = actividadSeleccionadaIndex != -1;
+            btnVerActividad.setEnabled(filaSeleccionada);
+            btnEditarActividad.setEnabled(filaSeleccionada);
+            btnGestionarParticipantes.setEnabled(filaSeleccionada);
+        });
+    }
+    
+    private void inicializarTabla() {
+        DefaultTableModel modelo = new DefaultTableModel(
+                new Object[][]{},
+                new String[]{
+                    "Nombre", "Tipo", "Fecha Hora", "Capacidad", "Duración", "Evento", "Lugar", "Finalizado"
+                }) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        tblActividades.setModel(modelo);
+    }
+
+    private void cargarActividades() {
+        try {
+            listaActividades = CoordinadorNegocio.getInstancia().consultarTodasActividades();
+            actualizarTabla();
+        } catch (NegocioException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al cargar actividades: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            listaActividades = new ArrayList<>();
+        }
+    }
+
+    private void actualizarTabla() {
+        DefaultTableModel modelo = (DefaultTableModel) tblActividades.getModel();
+        modelo.setRowCount(0);
+
+        for (ActividadDTO actividad : listaActividades) {
+            modelo.addRow(new Object[]{
+                actividad.getNombre(),
+                actividad.getTipo(),
+                actividad.getFechaHoraInicio().toString(),
+                actividad.getCapacidad(),
+                actividad.getDuracion() + " min",
+                actividad.getNombreEvento(),
+                actividad.getNombreLugar(),
+                actividad.getFinalizado() ? "Sí" : "No"
+            });
+        }
     }
 
     /**
@@ -135,11 +211,11 @@ public class ModuloActividadesForm extends javax.swing.JFrame {
                                     .addComponent(btnVolver, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(btnEditarActividad, javax.swing.GroupLayout.PREFERRED_SIZE, 312, javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(btnGestionarParticipantes, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addGroup(layout.createSequentialGroup()
-                                        .addGap(80, 80, 80)
-                                        .addComponent(btnNuevaActividad, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                                        .addGap(49, 49, 49)
+                                        .addComponent(btnNuevaActividad, javax.swing.GroupLayout.PREFERRED_SIZE, 251, javax.swing.GroupLayout.PREFERRED_SIZE))))
                             .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 912, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addContainerGap(55, Short.MAX_VALUE))
         );
@@ -169,59 +245,61 @@ public class ModuloActividadesForm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnVerActividadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVerActividadActionPerformed
-        // TODO add your handling code here:
+        if (actividadSeleccionadaIndex != -1) {
+            VerActividadForm.actividadSeleccionada = listaActividades.get(actividadSeleccionadaIndex);
+            CoordinadorAplicacion.getInstancia().mostrarVerActividad();
+            this.dispose();
+        }
     }//GEN-LAST:event_btnVerActividadActionPerformed
 
     private void btnEditarActividadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditarActividadActionPerformed
-        // TODO add your handling code here:
+        if (actividadSeleccionadaIndex != -1) {
+            ActividadDTO actividad = listaActividades.get(actividadSeleccionadaIndex);
+
+            if (actividad.getFinalizado()) {
+                JOptionPane.showMessageDialog(this,
+                        "La actividad ya está marcada como finalizada.",
+                        "Información", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            int confirmacion = JOptionPane.showConfirmDialog(this,
+                    "¿Está seguro de marcar esta actividad como finalizada?",
+                    "Confirmar finalización", JOptionPane.YES_NO_OPTION);
+
+            if (confirmacion == JOptionPane.YES_OPTION) {
+                try {
+                    CoordinadorNegocio.getInstancia().finalizarActividad(actividad);
+                    JOptionPane.showMessageDialog(this,
+                            "Actividad marcada como finalizada correctamente.",
+                            "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    cargarActividades(); // Recargar la tabla
+                } catch (NegocioException ex) {
+                    JOptionPane.showMessageDialog(this,
+                            "Error al finalizar actividad: " + ex.getMessage(),
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
     }//GEN-LAST:event_btnEditarActividadActionPerformed
 
     private void btnNuevaActividadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNuevaActividadActionPerformed
-        // TODO add your handling code here:
+        CoordinadorAplicacion.getInstancia().mostrarNuevaActividad();
+        this.dispose();
     }//GEN-LAST:event_btnNuevaActividadActionPerformed
 
     private void btnGestionarParticipantesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGestionarParticipantesActionPerformed
-        // TODO add your handling code here:
+        if (actividadSeleccionadaIndex != -1) {
+            ParticipantesActividadForm.actividadSeleccionada = listaActividades.get(actividadSeleccionadaIndex);
+            CoordinadorAplicacion.getInstancia().mostrarParticipantesActividad();
+            this.dispose();
+        }
     }//GEN-LAST:event_btnGestionarParticipantesActionPerformed
 
     private void btnVolverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVolverActionPerformed
-        // TODO add your handling code here:
+        CoordinadorAplicacion.getInstancia().mostrarMenuPrincipal();
+        this.dispose();
     }//GEN-LAST:event_btnVolverActionPerformed
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(ModuloActividadesForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(ModuloActividadesForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(ModuloActividadesForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(ModuloActividadesForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new ModuloActividadesForm().setVisible(true);
-            }
-        });
-    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnEditarActividad;

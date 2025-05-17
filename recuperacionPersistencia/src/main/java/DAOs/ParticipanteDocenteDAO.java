@@ -5,12 +5,15 @@
 package DAOs;
 
 import conexion.Conexion;
+import entidades.Participante;
 import entidades.ParticipanteDocente;
 import exception.PersistenciaException;
 import interfaces.IParticipanteDocenteDAO;
+import java.lang.reflect.Field;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
+import utils.EncryptionUtil;
 
 /**
  * Implementación de la interfaz IParticipanteDocenteDAO utilizando JPA.
@@ -30,9 +33,15 @@ public class ParticipanteDocenteDAO extends ParticipanteDAO implements IParticip
     public ParticipanteDocente guardarDocente(ParticipanteDocente docente) throws PersistenciaException {
         EntityManager em = Conexion.crearConexion();
         try {
+            // Encriptar datos sensibles antes de guardar
+            encriptarDatosSensibles(docente);
+            
             em.getTransaction().begin();
             em.persist(docente);
             em.getTransaction().commit();
+            
+            // Desencriptar datos para devolverlos a la capa de negocio
+            desencriptarDatosSensibles(docente);
             return docente;
         } catch (Exception ex) {
             em.getTransaction().rollback();
@@ -101,6 +110,33 @@ public class ParticipanteDocenteDAO extends ParticipanteDAO implements IParticip
             throw new PersistenciaException("Error al consultar docentes por departamento: " + ex.getMessage());
         } finally {
             em.close();
+        }
+    }
+    
+    // Métodos auxiliares para encriptar/desencriptar datos
+    private void encriptarDatosSensibles(ParticipanteDocente participante) {
+        if (participante.getCorreo() != null) {
+            try {
+                Field correoField = Participante.class.getDeclaredField("correo");
+                correoField.setAccessible(true);
+                String correoOriginal = (String) correoField.get(participante);
+                correoField.set(participante, EncryptionUtil.encriptar(correoOriginal));
+            } catch (Exception ex) {
+                System.err.println("Error al encriptar correo: " + ex.getMessage());
+            }
+        }
+    }
+
+    private void desencriptarDatosSensibles(ParticipanteDocente participante) {
+        if (participante.getCorreo() != null) {
+            try {
+                Field correoField = Participante.class.getDeclaredField("correo");
+                correoField.setAccessible(true);
+                String correoEncriptado = (String) correoField.get(participante);
+                correoField.set(participante, EncryptionUtil.desencriptar(correoEncriptado));
+            } catch (Exception ex) {
+                System.err.println("Error al desencriptar correo: " + ex.getMessage());
+            }
         }
     }
     

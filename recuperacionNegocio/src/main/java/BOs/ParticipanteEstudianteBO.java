@@ -116,7 +116,7 @@ public class ParticipanteEstudianteBO extends ParticipanteBO implements IPartici
      * @throws NegocioException Si hay errores de persistencia
      */
     @Override
-    public ParticipanteEstudianteDTO consultarPorNumeroControl(Integer numeroControl) throws NegocioException {
+    public ParticipanteEstudianteDTO consultarPorNumeroControl(String numeroControl) throws NegocioException {
         try {
             if (numeroControl == null) {
                 throw new NegocioException("El número de control no puede ser nulo.");
@@ -159,7 +159,7 @@ public class ParticipanteEstudianteBO extends ParticipanteBO implements IPartici
      * @throws NegocioException Si hay errores de persistencia
      */
     @Override
-    public boolean verificarNumeroControlDisponible(Integer numeroControl) throws NegocioException {
+    public boolean verificarNumeroControlDisponible(String numeroControl) throws NegocioException {
         try {
             if (numeroControl == null) {
                 throw new NegocioException("El número de control no puede ser nulo.");

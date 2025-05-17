@@ -24,7 +24,7 @@ public class ParticipanteEstudiante extends Participante {
      * Número de control del estudiante, debe ser único.
      */
     @Column(name = "numero_control", nullable = false, unique = true)
-    private Integer numeroControl;
+    private String numeroControl; // String por la encriptación
 
     /**
      * Carrera que está cursando el estudiante.
@@ -51,7 +51,7 @@ public class ParticipanteEstudiante extends Participante {
      * @param numeroControl Número de control único del estudiante
      * @param carrera Carrera que estudia
      */
-    public ParticipanteEstudiante(String nombre, String apellidoPaterno, String apellidoMaterno, String correo, Integer cantidadAsistencias, List<Inscripcion> inscripciones, Integer numeroControl, String carrera) {
+    public ParticipanteEstudiante(String nombre, String apellidoPaterno, String apellidoMaterno, String correo, Integer cantidadAsistencias, List<Inscripcion> inscripciones, String numeroControl, String carrera) {
         super(nombre, apellidoPaterno, apellidoMaterno, correo, cantidadAsistencias, inscripciones);
         this.numeroControl = numeroControl;
         this.carrera = carrera;
@@ -70,7 +70,7 @@ public class ParticipanteEstudiante extends Participante {
      * @param numeroControl Número de control único del estudiante
      * @param carrera Carrera que estudia
      */
-    public ParticipanteEstudiante(Long id, String nombre, String apellidoPaterno, String apellidoMaterno, String correo, Integer cantidadAsistencias, List<Inscripcion> inscripciones, Integer numeroControl, String carrera) {
+    public ParticipanteEstudiante(Long id, String nombre, String apellidoPaterno, String apellidoMaterno, String correo, Integer cantidadAsistencias, List<Inscripcion> inscripciones, String numeroControl, String carrera) {
         super(id, nombre, apellidoPaterno, apellidoMaterno, correo, cantidadAsistencias, inscripciones);
         this.numeroControl = numeroControl;
         this.carrera = carrera;
@@ -81,7 +81,7 @@ public class ParticipanteEstudiante extends Participante {
      *
      * @return El número de control
      */
-    public Integer getNumeroControl() {
+    public String getNumeroControl() {
         return numeroControl;
     }
 
@@ -90,7 +90,7 @@ public class ParticipanteEstudiante extends Participante {
      *
      * @param numeroControl El número de control a establecer
      */
-    public void setNumeroControl(Integer numeroControl) {
+    public void setNumeroControl(String numeroControl) {
         this.numeroControl = numeroControl;
     }
 

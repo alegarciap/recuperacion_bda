@@ -15,7 +15,7 @@ public class ParticipanteEstudianteDTO extends ParticipanteDTO {
     /**
      * Número de control del estudiante.
      */
-    private Integer numeroControl;
+    private String numeroControl;
 
     /**
      * Carrera que estudia.
@@ -42,7 +42,7 @@ public class ParticipanteEstudianteDTO extends ParticipanteDTO {
      * @param carrera Carrera que estudia
      */
     public ParticipanteEstudianteDTO(String nombre, String apellidoPaterno, String apellidoMaterno,
-            String correo, Integer numeroControl, String carrera) {
+            String correo, String numeroControl, String carrera) {
         super(nombre, apellidoPaterno, apellidoMaterno, correo, "ESTUDIANTE");
         this.numeroControl = numeroControl;
         this.carrera = carrera;
@@ -62,7 +62,7 @@ public class ParticipanteEstudianteDTO extends ParticipanteDTO {
      */
     public ParticipanteEstudianteDTO(String nombre, String apellidoPaterno, String apellidoMaterno,
             String correo, Integer cantidadAsistencias, Integer totalInscripciones,
-            Integer numeroControl, String carrera) {
+            String numeroControl, String carrera) {
         super(nombre, apellidoPaterno, apellidoMaterno, correo, "ESTUDIANTE",
                 cantidadAsistencias, totalInscripciones);
         this.numeroControl = numeroControl;
@@ -74,7 +74,7 @@ public class ParticipanteEstudianteDTO extends ParticipanteDTO {
      *
      * @return El número de control
      */
-    public Integer getNumeroControl() {
+    public String getNumeroControl() {
         return numeroControl;
     }
 
@@ -83,7 +83,7 @@ public class ParticipanteEstudianteDTO extends ParticipanteDTO {
      *
      * @param numeroControl El número de control a establecer
      */
-    public void setNumeroControl(Integer numeroControl) {
+    public void setNumeroControl(String numeroControl) {
         this.numeroControl = numeroControl;
     }
 

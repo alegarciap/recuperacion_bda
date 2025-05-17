@@ -207,8 +207,8 @@ public class ParticipanteDAO implements IParticipanteDAO {
                 try {
                     Field numeroControlField = ParticipanteEstudiante.class.getDeclaredField("numeroControl");
                     numeroControlField.setAccessible(true);
-                    Integer numeroControl = estudiante.getNumeroControl();
-                    numeroControlField.set(estudiante, EncryptionUtil.encriptar(numeroControl.toString()));
+                    String numeroControl = estudiante.getNumeroControl();
+                    numeroControlField.set(estudiante, EncryptionUtil.encriptar(numeroControl));
                 } catch (Exception ex) {
                     System.err.println("Error al encriptar número de control: " + ex.getMessage());
                 }
@@ -237,7 +237,7 @@ public class ParticipanteDAO implements IParticipanteDAO {
                 String numeroControlEncriptado = (String) numeroControlField.get(estudiante);
                 if (numeroControlEncriptado != null) {
                     String numeroDesencriptado = EncryptionUtil.desencriptar(numeroControlEncriptado);
-                    numeroControlField.set(estudiante, Integer.parseInt(numeroDesencriptado));
+                    numeroControlField.set(estudiante, numeroDesencriptado);
                 }
             } catch (Exception ex) {
                 System.err.println("Error al desencriptar número de control: " + ex.getMessage());

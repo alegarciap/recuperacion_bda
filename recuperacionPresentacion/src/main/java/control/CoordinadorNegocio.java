@@ -12,6 +12,13 @@ import DTOs.InscripcionCreacionDTO;
 import DTOs.InscripcionDTO;
 import DTOs.LugarDTO;
 import DTOs.OrganizadorDTO;
+import DTOs.ParticipanteDTO;
+import DTOs.ParticipanteDocenteCreacionDTO;
+import DTOs.ParticipanteDocenteDTO;
+import DTOs.ParticipanteEstudianteCreacionDTO;
+import DTOs.ParticipanteEstudianteDTO;
+import DTOs.ParticipanteExternoCreacionDTO;
+import DTOs.ParticipanteExternoDTO;
 import exception.NegocioException;
 import fabrica.FabricaBO;
 import interfaces.*;
@@ -181,19 +188,125 @@ public class CoordinadorNegocio {
     }
 
     // INSCRIPCIONES
-    public List<InscripcionDTO> consultarInscripcionesPorActividad(String nombreActividad, String fechaHora) throws NegocioException {
+    /**
+     * Consulta inscripciones por actividad.
+     *
+     * @param nombreActividad Nombre de la actividad
+     * @param fechaHoraStr Fecha y hora en formato string
+     * @return Lista de inscripciones
+     * @throws NegocioException Si ocurre un error
+     */
+    public List<InscripcionDTO> consultarInscripcionesPorActividad(String nombreActividad, String fechaHoraStr) throws NegocioException {
         IInscripcionBO inscripcionBO = FabricaBO.getInstancia().crearInscripcionBO();
-        return inscripcionBO.consultarPorActividad(nombreActividad, fechaHora);
+        return inscripcionBO.consultarPorActividad(nombreActividad, fechaHoraStr);
     }
 
+    /**
+     * Registra la asistencia de un participante.
+     *
+     * @param inscripcion DTO de la inscripción
+     * @param asistio true si asistió, false si no
+     * @throws NegocioException Si ocurre un error
+     */
     public void registrarAsistencia(InscripcionDTO inscripcion, boolean asistio) throws NegocioException {
         IInscripcionBO inscripcionBO = FabricaBO.getInstancia().crearInscripcionBO();
         inscripcionBO.registrarAsistencia(inscripcion, asistio);
+    }
+    
+    /**
+     * Consulta inscripciones por participante.
+     *
+     * @param participanteId ID del participante
+     * @return Lista de inscripciones
+     * @throws NegocioException Si ocurre un error
+     */
+    public List<InscripcionDTO> consultarPorParticipante(Long participanteId) throws NegocioException {
+        return inscripcionBO.consultarPorParticipante(participanteId);
     }
 
     public InscripcionDTO registrarInscripcion(InscripcionCreacionDTO inscripcion) throws NegocioException {
         IInscripcionBO inscripcionBO = FabricaBO.getInstancia().crearInscripcionBO();
         return inscripcionBO.registrar(inscripcion);
+    }
+    
+    // PARTICIPANTES
+    /**
+     * Consulta todos los participantes.
+     *
+     * @return Lista de participantes
+     * @throws NegocioException Si ocurre un error
+     */
+    public List<ParticipanteDTO> consultarTodosParticipantes() throws NegocioException {
+        return participanteBO.consultarTodos();
+    }
+
+    /**
+     * Consulta un participante por su correo.
+     *
+     * @param correo Correo del participante
+     * @return DTO del participante
+     * @throws NegocioException Si ocurre un error
+     */
+    public ParticipanteDTO consultarPorCorreo(String correo) throws NegocioException {
+        return participanteBO.consultarPorCorreo(correo);
+    }
+
+    /**
+     * Consulta un participante por su ID.
+     *
+     * @param id ID del participante
+     * @return DTO del participante
+     * @throws NegocioException Si ocurre un error
+     */
+    public ParticipanteDTO consultarParticipante(Long id) throws NegocioException {
+        return participanteBO.consultar(id);
+    }
+
+    /**
+     * Consulta participantes por nombre.
+     *
+     * @param nombre Nombre a buscar
+     * @return Lista de participantes
+     * @throws NegocioException Si ocurre un error
+     */
+    public List<ParticipanteDTO> consultarPorNombre(String nombre) throws NegocioException {
+        return participanteBO.consultarPorNombre(nombre);
+    }
+
+    /**
+     * Registra un nuevo estudiante.
+     *
+     * @param estudianteDTO DTO con la información del estudiante
+     * @return DTO del estudiante registrado
+     * @throws NegocioException Si ocurre un error
+     */
+    public ParticipanteEstudianteDTO registrarEstudiante(ParticipanteEstudianteCreacionDTO estudianteDTO)
+            throws NegocioException {
+        return estudianteBO.registrar(estudianteDTO);
+    }
+
+    /**
+     * Registra un nuevo docente.
+     *
+     * @param docenteDTO DTO con la información del docente
+     * @return DTO del docente registrado
+     * @throws NegocioException Si ocurre un error
+     */
+    public ParticipanteDocenteDTO registrarDocente(ParticipanteDocenteCreacionDTO docenteDTO)
+            throws NegocioException {
+        return docenteBO.registrar(docenteDTO);
+    }
+
+    /**
+     * Registra un nuevo participante externo.
+     *
+     * @param externoDTO DTO con la información del participante externo
+     * @return DTO del participante externo registrado
+     * @throws NegocioException Si ocurre un error
+     */
+    public ParticipanteExternoDTO registrarExterno(ParticipanteExternoCreacionDTO externoDTO)
+            throws NegocioException {
+        return externoBO.registrar(externoDTO);
     }
     
 }

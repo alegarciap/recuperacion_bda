@@ -12,6 +12,11 @@ package DTOs;
  * @author Alejandra García Preciado - 252444
  */
 public class ParticipanteDTO {
+    
+    /**
+     * Identificador único del participante.
+     */
+    private Long idParticipante;
 
     /**
      * Nombre del participante.
@@ -77,6 +82,29 @@ public class ParticipanteDTO {
     /**
      * Constructor con todos los atributos.
      *
+     * @param idParticipante Identificador único
+     * @param nombre Nombre del participante
+     * @param apellidoPaterno Apellido paterno
+     * @param apellidoMaterno Apellido materno
+     * @param correo Correo electrónico
+     * @param tipoParticipante Tipo de participante
+     * @param cantidadAsistencias Cantidad de asistencias acumuladas
+     * @param totalInscripciones Número de inscripciones realizadas
+     */
+    public ParticipanteDTO(Long idParticipante, String nombre, String apellidoPaterno, String apellidoMaterno, String correo, String tipoParticipante, Integer cantidadAsistencias, Integer totalInscripciones) {
+        this.idParticipante = idParticipante;
+        this.nombre = nombre;
+        this.apellidoPaterno = apellidoPaterno;
+        this.apellidoMaterno = apellidoMaterno;
+        this.correo = correo;
+        this.tipoParticipante = tipoParticipante;
+        this.cantidadAsistencias = cantidadAsistencias;
+        this.totalInscripciones = totalInscripciones;
+    }
+
+    /**
+     * Constructor con todos los atributos menos el identificador.
+     *
      * @param nombre Nombre del participante
      * @param apellidoPaterno Apellido paterno
      * @param apellidoMaterno Apellido materno
@@ -95,6 +123,24 @@ public class ParticipanteDTO {
         this.tipoParticipante = tipoParticipante;
         this.cantidadAsistencias = cantidadAsistencias;
         this.totalInscripciones = totalInscripciones;
+    }
+
+    /**
+     * Obtiene el identificador del participante.
+     *
+     * @return El identificador
+     */
+    public Long getIdParticipante() {
+        return idParticipante;
+    }
+
+    /**
+     * Establece el identificador del participante.
+     *
+     * @param idParticipante El identificador a establecer
+     */
+    public void setIdParticipante(Long idParticipante) {
+        this.idParticipante = idParticipante;
     }
     
     /**

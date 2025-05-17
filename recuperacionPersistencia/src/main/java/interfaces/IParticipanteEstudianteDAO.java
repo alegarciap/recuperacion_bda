@@ -49,7 +49,7 @@ public interface IParticipanteEstudianteDAO extends IParticipanteDAO {
      * @return ParticipanteEstudiante encontrado o null si no existe
      * @throws PersistenciaException Si ocurre un error durante la operación
      */
-    public ParticipanteEstudiante buscarPorNumeroControl(Integer numeroControl) throws PersistenciaException;
+    public ParticipanteEstudiante buscarPorNumeroControl(String numeroControl) throws PersistenciaException;
 
     /**
      * Consulta participantes estudiantes por carrera.

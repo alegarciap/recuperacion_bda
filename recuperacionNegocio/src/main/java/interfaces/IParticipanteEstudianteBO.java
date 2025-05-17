@@ -51,7 +51,7 @@ public interface IParticipanteEstudianteBO extends IParticipanteBO {
      * @return DTO con la información del estudiante
      * @throws NegocioException Si hay errores de persistencia
      */
-    public ParticipanteEstudianteDTO consultarPorNumeroControl(Integer numeroControl) throws NegocioException;
+    public ParticipanteEstudianteDTO consultarPorNumeroControl(String numeroControl) throws NegocioException;
 
     /**
      * Consulta participantes estudiantes por carrera.
@@ -69,6 +69,6 @@ public interface IParticipanteEstudianteBO extends IParticipanteBO {
      * @return true si está disponible, false si ya existe
      * @throws NegocioException Si hay errores de persistencia
      */
-    public boolean verificarNumeroControlDisponible(Integer numeroControl) throws NegocioException;
+    public boolean verificarNumeroControlDisponible(String numeroControl) throws NegocioException;
 
 }

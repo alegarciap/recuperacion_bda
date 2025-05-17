@@ -4,6 +4,7 @@
  */
 package control;
 
+import DTOs.ParticipanteDTO;
 import presentacion.MenuPrincipalForm;
 import presentacion.moduloActividades.*;
 import presentacion.moduloEventos.*;
@@ -143,6 +144,8 @@ public class CoordinadorAplicacion {
      * Formulario que muestra los detalles de un participante específico.
      */
     private VerParticipanteForm verParticipanteForm;
+    
+    private ParticipanteDTO participanteSeleccionado;
     
     /**
      * Constructor privado (patrón Singleton). Previene la creación de múltiples
@@ -404,7 +407,28 @@ public class CoordinadorAplicacion {
         if (verParticipanteForm == null) {
             verParticipanteForm = new VerParticipanteForm();
         }
+        if (participanteSeleccionado != null) {
+            verParticipanteForm.setParticipante(participanteSeleccionado);
+        }
         verParticipanteForm.setVisible(true);
+    }
+    
+    /**
+     * Sets the current selected participant for sharing between forms.
+     *
+     * @param participante The participant to set
+     */
+    public void setParticipanteSeleccionado(ParticipanteDTO participante) {
+        this.participanteSeleccionado = participante;
+    }
+
+    /**
+     * Gets the current selected participant.
+     *
+     * @return The currently selected participant
+     */
+    public ParticipanteDTO getParticipanteSeleccionado() {
+        return this.participanteSeleccionado;
     }
 
     /**

@@ -5,9 +5,11 @@
 package DAOs;
 
 import conexion.Conexion;
+import entidades.Participante;
 import entidades.ParticipanteEstudiante;
 import exception.PersistenciaException;
 import interfaces.IParticipanteEstudianteDAO;
+import java.lang.reflect.Field;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -16,7 +18,7 @@ import utils.EncryptionUtil;
 
 /**
  * Implementación de la interfaz IParticipanteEstudianteDAO utilizando JPA.
- * 
+ *
  * @author Alejandra García Preciado - 252444
  */
 public class ParticipanteEstudianteDAO extends ParticipanteDAO implements IParticipanteEstudianteDAO {
@@ -32,9 +34,15 @@ public class ParticipanteEstudianteDAO extends ParticipanteDAO implements IParti
     public ParticipanteEstudiante guardarEstudiante(ParticipanteEstudiante estudiante) throws PersistenciaException {
         EntityManager em = Conexion.crearConexion();
         try {
+            // Encriptar datos sensibles antes de guardar
+            encriptarDatosSensibles(estudiante);
+
             em.getTransaction().begin();
             em.persist(estudiante);
             em.getTransaction().commit();
+            
+            // Desencriptar datos para devolverlos a la capa de negocio
+            desencriptarDatosSensibles(estudiante);
             return estudiante;
         } catch (Exception ex) {
             em.getTransaction().rollback();
@@ -94,13 +102,13 @@ public class ParticipanteEstudianteDAO extends ParticipanteDAO implements IParti
      * @throws PersistenciaException Si ocurre un error durante la operación
      */
     @Override
-    public ParticipanteEstudiante buscarPorNumeroControl(Integer numeroControl) throws PersistenciaException {
+    public ParticipanteEstudiante buscarPorNumeroControl(String numeroControl) throws PersistenciaException {
         if (numeroControl == null) {
             return null;
         }
 
         // Encriptar el número de control para la búsqueda
-        String numeroControlEncriptado = EncryptionUtil.encriptar(numeroControl.toString());
+        String numeroControlEncriptado = EncryptionUtil.encriptar(numeroControl);
 
         EntityManager em = Conexion.crearConexion();
         try {
@@ -143,6 +151,56 @@ public class ParticipanteEstudianteDAO extends ParticipanteDAO implements IParti
             throw new PersistenciaException("Error al consultar estudiantes por carrera: " + ex.getMessage());
         } finally {
             em.close();
+        }
+    }
+
+    // Métodos auxiliares para encriptar/desencriptar datos
+    private void encriptarDatosSensibles(ParticipanteEstudiante participante) {
+        if (participante.getCorreo() != null) {
+            try {
+                Field correoField = Participante.class.getDeclaredField("correo");
+                correoField.setAccessible(true);
+                String correoOriginal = (String) correoField.get(participante);
+                correoField.set(participante, EncryptionUtil.encriptar(correoOriginal));
+            } catch (Exception ex) {
+                System.err.println("Error al encriptar correo: " + ex.getMessage());
+            }
+        }
+
+        if (participante.getNumeroControl() != null) {
+            try {
+                Field numeroControlField = ParticipanteEstudiante.class.getDeclaredField("numeroControl");
+                numeroControlField.setAccessible(true);
+                String numeroControl = participante.getNumeroControl();
+                numeroControlField.set(participante, EncryptionUtil.encriptar(numeroControl));
+            } catch (Exception ex) {
+                System.err.println("Error al encriptar número de control: " + ex.getMessage());
+            }
+        }
+    }
+    
+    private void desencriptarDatosSensibles(ParticipanteEstudiante participante) {
+        if (participante.getCorreo() != null) {
+            try {
+                Field correoField = Participante.class.getDeclaredField("correo");
+                correoField.setAccessible(true);
+                String correoEncriptado = (String) correoField.get(participante);
+                correoField.set(participante, EncryptionUtil.desencriptar(correoEncriptado));
+            } catch (Exception ex) {
+                System.err.println("Error al desencriptar correo: " + ex.getMessage());
+            }
+        }
+
+        try {
+            Field numeroControlField = ParticipanteEstudiante.class.getDeclaredField("numeroControl");
+            numeroControlField.setAccessible(true);
+            String numeroControlEncriptado = (String) numeroControlField.get(participante);
+            if (numeroControlEncriptado != null) {
+                String numeroDesencriptado = EncryptionUtil.desencriptar(numeroControlEncriptado);
+                numeroControlField.set(participante, numeroDesencriptado);
+            }
+        } catch (Exception ex) {
+            System.err.println("Error al desencriptar número de control: " + ex.getMessage());
         }
     }
     

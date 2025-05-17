@@ -53,13 +53,14 @@ public class ActividadDetalleDTO extends ActividadDTO {
      * @param nombreLugar Nombre del lugar donde se realizará
      * @param numeroInscritos Número de participantes inscritos
      * @param porcentajeOcupacion Porcentaje de ocupación actual
+     * @param nombreOrganizador Nombre del organizador de la actividad
      */
     public ActividadDetalleDTO(String nombre, String tipo, LocalDateTime fechaHoraInicio,
             Integer capacidad, Integer duracion, Boolean finalizado,
             String nombreEvento, String nombreLugar,
-            Integer numeroInscritos, Double porcentajeOcupacion) {
+            Integer numeroInscritos, Double porcentajeOcupacion, String nombreOrganizador) {
         super(nombre, tipo, fechaHoraInicio, capacidad, duracion, finalizado,
-                nombreEvento, nombreLugar, numeroInscritos, porcentajeOcupacion);
+                nombreEvento, nombreLugar, numeroInscritos, porcentajeOcupacion, nombreOrganizador);
         this.participantes = new ArrayList<>();
         this.horaEstimadaFin = fechaHoraInicio.plusMinutes(duracion);
         this.espaciosDisponibles = capacidad - numeroInscritos;
@@ -79,14 +80,15 @@ public class ActividadDetalleDTO extends ActividadDTO {
      * @param numeroInscritos Número de participantes inscritos
      * @param porcentajeOcupacion Porcentaje de ocupación actual
      * @param participantes Lista de participantes inscritos
+     * @param nombreOrganizador Nombre del organizador de la actividad
      */
     public ActividadDetalleDTO(String nombre, String tipo, LocalDateTime fechaHoraInicio,
             Integer capacidad, Integer duracion, Boolean finalizado,
             String nombreEvento, String nombreLugar,
             Integer numeroInscritos, Double porcentajeOcupacion,
-            List<ParticipanteDTO> participantes) {
+            List<ParticipanteDTO> participantes, String nombreOrganizador) {
         super(nombre, tipo, fechaHoraInicio, capacidad, duracion, finalizado,
-                nombreEvento, nombreLugar, numeroInscritos, porcentajeOcupacion);
+                nombreEvento, nombreLugar, numeroInscritos, porcentajeOcupacion, nombreOrganizador);
         this.participantes = participantes;
         this.horaEstimadaFin = fechaHoraInicio.plusMinutes(duracion);
         this.espaciosDisponibles = capacidad - numeroInscritos;

@@ -14,6 +14,11 @@ import java.time.LocalDateTime;
  * @author Alejandra García Preciado - 252444
  */
 public class ActividadDTO {
+    
+    /**
+     * Identificador único de la actividad.
+     */
+    private Long idActividad;
 
     /**
      * Nombre de la actividad.
@@ -64,6 +69,11 @@ public class ActividadDTO {
      * Porcentaje de ocupación.
      */
     private Double porcentajeOcupacion;
+    
+    /**
+     * Nombre del organizador de la actividad.
+     */
+    private String nombreOrganizador;
 
     /**
      * Constructor por defecto.
@@ -82,10 +92,11 @@ public class ActividadDTO {
      * @param finalizado Indica si la actividad está finalizada
      * @param nombreEvento Nombre del evento al que pertenece
      * @param nombreLugar Nombre del lugar donde se realizará
+     * @param nombreOrganizador Nombre del organizador de la actividad
      */
     public ActividadDTO(String nombre, String tipo, LocalDateTime fechaHoraInicio,
             Integer capacidad, Integer duracion, Boolean finalizado,
-            String nombreEvento, String nombreLugar) {
+            String nombreEvento, String nombreLugar, String nombreOrganizador) {
         this.nombre = nombre;
         this.tipo = tipo;
         this.fechaHoraInicio = fechaHoraInicio;
@@ -94,12 +105,13 @@ public class ActividadDTO {
         this.finalizado = finalizado;
         this.nombreEvento = nombreEvento;
         this.nombreLugar = nombreLugar;
+        this.nombreOrganizador = nombreOrganizador;
         this.numeroInscritos = 0;
         this.porcentajeOcupacion = 0.0;
     }
 
     /**
-     * Constructor completo incluyendo estadísticas.
+     * Constructor completo pero sin identificador incluyendo estadísticas.
      *
      * @param nombre Nombre de la actividad
      * @param tipo Tipo de actividad
@@ -111,11 +123,12 @@ public class ActividadDTO {
      * @param nombreLugar Nombre del lugar donde se realizará
      * @param numeroInscritos Número de participantes inscritos
      * @param porcentajeOcupacion Porcentaje de ocupación actual
+     * @param nombreOrganizador Nombre del organizador de la actividad
      */
     public ActividadDTO(String nombre, String tipo, LocalDateTime fechaHoraInicio,
             Integer capacidad, Integer duracion, Boolean finalizado,
             String nombreEvento, String nombreLugar,
-            Integer numeroInscritos, Double porcentajeOcupacion) {
+            Integer numeroInscritos, Double porcentajeOcupacion, String nombreOrganizador) {
         this.nombre = nombre;
         this.tipo = tipo;
         this.fechaHoraInicio = fechaHoraInicio;
@@ -126,6 +139,56 @@ public class ActividadDTO {
         this.nombreLugar = nombreLugar;
         this.numeroInscritos = numeroInscritos;
         this.porcentajeOcupacion = porcentajeOcupacion;
+        this.nombreOrganizador = nombreOrganizador;
+    }
+
+    /**
+     * Constructor con todos sus atributos.
+     *
+     * @param idActividad Identificador único
+     * @param nombre Nombre de la actividad
+     * @param tipo Tipo de actividad
+     * @param fechaHoraInicio Fecha y hora de inicio
+     * @param capacidad Capacidad máxima de participantes
+     * @param duracion Duración estimada en minutos
+     * @param finalizado Indica si la actividad está finalizada
+     * @param nombreEvento Nombre del evento al que pertenece
+     * @param nombreLugar Nombre del lugar donde se realizará
+     * @param numeroInscritos Número de participantes inscritos
+     * @param porcentajeOcupacion Porcentaje de ocupación actual
+     * @param nombreOrganizador Nombre del organizador de la actividad
+     */
+    public ActividadDTO(Long idActividad, String nombre, String tipo, LocalDateTime fechaHoraInicio, Integer capacidad, Integer duracion, Boolean finalizado, String nombreEvento, String nombreLugar, Integer numeroInscritos, Double porcentajeOcupacion, String nombreOrganizador) {
+        this.idActividad = idActividad;
+        this.nombre = nombre;
+        this.tipo = tipo;
+        this.fechaHoraInicio = fechaHoraInicio;
+        this.capacidad = capacidad;
+        this.duracion = duracion;
+        this.finalizado = finalizado;
+        this.nombreEvento = nombreEvento;
+        this.nombreLugar = nombreLugar;
+        this.numeroInscritos = numeroInscritos;
+        this.porcentajeOcupacion = porcentajeOcupacion;
+        this.nombreOrganizador = nombreOrganizador;
+    }
+
+    /**
+     * Obtiene el id de la actividad.
+     *
+     * @return El id
+     */
+    public Long getIdActividad() {
+        return idActividad;
+    }
+
+    /**
+     * Establece el id de la actividad.
+     *
+     * @param idActividad El id a establecer
+     */
+    public void setIdActividad(Long idActividad) {
+        this.idActividad = idActividad;
     }
     
     /**
@@ -307,5 +370,25 @@ public class ActividadDTO {
     public void setPorcentajeOcupacion(Double porcentajeOcupacion) {
         this.porcentajeOcupacion = porcentajeOcupacion;
     }
+
+    /**
+     * Obtiene el nombre del organizador de la actividad.
+     *
+     * @return El nombre del organizador
+     */
+    public String getNombreOrganizador() {
+        return nombreOrganizador;
+    }
+
+    /**
+     * Establece el nombre del organizador de la actividad.
+     *
+     * @param nombreOrganizador El nombre del organizador a establecer
+     */
+    public void setNombreOrganizador(String nombreOrganizador) {
+        this.nombreOrganizador = nombreOrganizador;
+    }
+    
+    
 
 }
